@@ -144,7 +144,7 @@ a{color:inherit}
   filter:blur(46px);opacity:.5;z-index:-1;animation:spin 22s linear infinite;
 }
 @keyframes spin{to{transform:rotate(1turn)}}
-.art-tags{position:absolute;top:12px;left:12px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 24px)}
+.art-tags{position:absolute;top:12px;right:12px;left:auto;display:flex;flex-wrap:wrap;gap:6px;max-width:min(64%,320px);justify-content:flex-end}
 .art-tags span{
   font-size:.68rem;font-weight:800;letter-spacing:.02em;padding:6px 10px;border-radius:999px;
   background:rgba(6,9,18,.68);border:1px solid rgba(255,255,255,.22);color:#e8ecff;
@@ -157,8 +157,8 @@ a{color:inherit}
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
 }
 .tod button{
-  border:0;background:transparent;color:#c8d1ea;font:inherit;font-size:.76rem;font-weight:800;
-  padding:8px 12px;border-radius:999px;cursor:pointer;min-height:34px;touch-action:manipulation;transition:.2s;
+  border:0;background:transparent;color:#c8d1ea;font:inherit;font-size:.72rem;font-weight:800;white-space:nowrap;
+  padding:7px 10px;border-radius:999px;cursor:pointer;min-height:32px;touch-action:manipulation;transition:.2s;
 }
 .tod button:hover{color:#fff;background:rgba(255,255,255,.08)}
 .tod button[aria-pressed="true"]{background:linear-gradient(120deg,#7c5cff,#22d3ee);color:#08060f;box-shadow:0 6px 18px -8px #22d3ee}
@@ -222,7 +222,7 @@ select.sort{
 select.sort option{background:#0b1020}
 
 /* ───────────────── 카드 ───────────────── */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:16px}
 .card{
   position:relative;overflow:hidden;border-radius:var(--r);
   border:1px solid var(--line);
@@ -245,16 +245,17 @@ select.sort option{background:#0b1020}
 }
 .card:hover{transform:translateY(-6px);border-color:transparent;box-shadow:0 34px 70px -34px rgba(0,0,0,.95),0 0 42px -22px var(--a1,#7c5cff)}
 .card:hover::before,.card:hover::after{opacity:1}
-.card-top{display:flex;gap:12px;align-items:flex-start}
+.card-top{display:flex;gap:12px;align-items:center;padding-right:26px}
 .icon-tile{
-  width:52px;height:52px;flex:0 0 auto;border-radius:16px;display:grid;place-items:center;font-size:25px;
+  width:46px;height:46px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;font-size:22px;
   background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.14);
   box-shadow:0 12px 26px -16px var(--a1,#7c5cff),0 0 26px -18px var(--a2,#22d3ee) inset;
   transition:transform .35s var(--ease);
 }
 .card:hover .icon-tile{transform:translateY(-2px) rotate(-4deg) scale(1.05)}
-.card h3{margin:0;font-size:1.02rem;line-height:1.32;letter-spacing:-.01em;font-weight:800}
+.card h3{margin:0;font-size:.97rem;line-height:1.34;letter-spacing:-.01em;font-weight:800;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tagline{margin:2px 0 0;font-size:.78rem;color:var(--muted);line-height:1.5}
 .mini-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .mini-chips span{
@@ -443,7 +444,7 @@ footer b{color:#c8d2ee;letter-spacing:.12em}
     <div class="hero-copy">
       <span class="eyebrow">◈ Personal Arcade · 5 Games</span>
       <h1>CODEX<em>게임 관리소</em></h1>
-      <p class="lead">3D 복셀 마을을 누비는 차원 탐험 RPG부터 수학·한국사·원소 학습 게임까지.<br>다섯 개의 게임을 한 화면에서 실행하고, 플레이 기록을 직접 관리하세요.</p>
+      <p class="lead">3D 복셀 마을을 누비는 차원 탐험 RPG부터 수학·한국사·원소 학습 게임까지, 다섯 개의 게임을 한 화면에서 실행하고 플레이 기록을 직접 관리하세요.</p>
       <div class="hero-cta">
         <button class="btn btn-primary" id="heroPlay">▶ 추천 게임 시작</button>
         <button class="btn btn-ghost" id="heroRandom">🎲 랜덤 게임</button>
@@ -472,7 +473,7 @@ footer b{color:#c8d2ee;letter-spacing:.12em}
   <section class="stats reveal" aria-label="허브 요약">
     <div class="stat"><b id="statGames">5</b><span>등록된 게임</span></div>
     <div class="stat"><b id="statPlays">0</b><span>총 플레이</span></div>
-    <div class="stat"><b id="statTop">—</b><span>최다 플레이</span></div>
+    <div class="stat"><b id="statTop">—</b><span id="statTopLabel">최다 플레이</span></div>
     <div class="stat"><b id="statFav">0</b><span>즐겨찾기</span></div>
   </section>
 
@@ -562,7 +563,7 @@ footer b{color:#c8d2ee;letter-spacing:.12em}
 /* ── 데이터 ─────────────────────────────────────────────── */
 const GAMES = [
   {
-    id:"codex", name:"CODEX: 끝없는 차원의 모험", icon:"🌌", cat:"rpg", catLabel:"RPG",
+    id:"codex", name:"CODEX: 끝없는 차원의 모험", short:"CODEX", icon:"🌌", cat:"rpg", catLabel:"RPG",
     tagline:"3D 복셀 마을에서 시작하는 차원 탐험 RPG",
     desc:"3D 아이소메트릭 복셀 마을을 거점으로 6개 차원을 탐험하는 RPG. 50개의 랜덤 직업과 1~5차 승급·초월각성, 최고 500레벨, 차원 전투·미니게임·상점·대장간·도감칭호·일일 퀘스트를 한 화면에서 즐깁니다.",
     how:"회원가입/로그인 → 마을에서 상점·대장간·포탈 이용 → 차원 탐험(룰렛)으로 경험치·토큰 획득 → 50개 직업 뽑기 → 승급 제단에서 1~5차 승급 → Lv.300 + 토큰 10,000으로 초월각성 → 6차원 도전",
@@ -572,7 +573,7 @@ const GAMES = [
     art:"assets/village-day.webp"
   },
   {
-    id:"math", name:"수학 던전 · 초등수학 RPG", icon:"🧙", cat:"study", catLabel:"수학",
+    id:"math", name:"수학 던전 · 초등수학 RPG", short:"수학 던전", icon:"🧙", cat:"study", catLabel:"수학",
     tagline:"문제를 풀며 몬스터를 잡는 초등 수학 RPG",
     desc:"초등 수학 문제를 풀면서 몬스터를 물리치는 RPG형 게임입니다. 덧셈·뺄셈·곱셈·나눗셈·분수·종합 문제를 선택하고 10문제 또는 15문제 코스로 진행할 수 있습니다.",
     how:"새로운 모험 시작 → 문제 종류 선택 → 문제 수 선택 → 문제 풀이 → 결과 확인 → 다시 도전",
@@ -580,7 +581,7 @@ const GAMES = [
     a1:"#f59e0b", a2:"#f97316", embedded:true
   },
   {
-    id:"history", name:"한국사 능력검정시험 퀴즈", icon:"🇰🇷", cat:"quiz", catLabel:"퀴즈",
+    id:"history", name:"한국사 능력검정시험 퀴즈", short:"한국사", icon:"🇰🇷", cat:"quiz", catLabel:"퀴즈",
     tagline:"주제와 난이도를 골라 푸는 한국사 객관식",
     desc:"한국사 주제를 선택하고 난이도를 골라 객관식 문제를 푸는 퀴즈 게임입니다. 선사시대·발해·정치사 카테고리와 1~4단계 난이도로 구성되어 있습니다.",
     how:"플레이 시작 → 주제 선택 → 난이도 선택 → 보기 선택 → 결과 확인",
@@ -588,7 +589,7 @@ const GAMES = [
     a1:"#e11d48", a2:"#fb7185", embedded:true
   },
   {
-    id:"mathtower", name:"6학년·중1 수학 타워 빌더", icon:"📐", cat:"study", catLabel:"수학",
+    id:"mathtower", name:"6학년·중1 수학 타워 빌더", short:"수학 타워", icon:"📐", cat:"study", catLabel:"수학",
     tagline:"정답마다 타워가 15cm씩 올라가는 수학 게임",
     desc:"분수·소수의 나눗셈, 비례식, 일차방정식 등 문제를 맞힐 때마다 상자 타워가 15cm씩 올라가는 수학 게임입니다.",
     how:"학기 선택 → 문제 풀러 가기 → 20문제 풀이 → 결과 확인 → 틀린 문제는 오답노트로 다시 도전",
@@ -596,7 +597,7 @@ const GAMES = [
     a1:"#22c55e", a2:"#14b8a6", embedded:true
   },
   {
-    id:"elements", name:"원소맞추기 게임", icon:"🧪", cat:"science", catLabel:"과학",
+    id:"elements", name:"원소맞추기 게임", short:"원소", icon:"🧪", cat:"science", catLabel:"과학",
     tagline:"주기율표 1~50번 원소를 익히는 퀴즈",
     desc:"주기율표 첫 50개 원소의 기호와 이름을 랜덤 순서로 익히고 맞히는 퀴즈 게임입니다.",
     how:"원소 학습 → 원소 맞추기 퀴즈 도전 → 결과 확인",
@@ -710,7 +711,8 @@ function renderStats(){
   document.getElementById("statFav").textContent = favCount();
   var top = null, topN = 0;
   GAMES.forEach(function(g){ var c=count(g.id); if(c>topN){ topN=c; top=g; } });
-  document.getElementById("statTop").textContent = top ? top.icon + " " + fmt(topN) : "—";
+  document.getElementById("statTop").textContent = top ? fmt(topN) : "—";
+  document.getElementById("statTopLabel").textContent = top ? (top.icon + " " + top.short) : "최다 플레이";
 }
 
 function renderFilters(){
