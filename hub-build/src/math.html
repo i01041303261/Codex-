@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>수학 던전 · 초등수학 RPG</title>
+<style>
+  :root{
+    --ink:#f8f2e8; --muted:#b6a9c4; --gold:#f3c96b; --gold-2:#c9922f;
+    --ember:#ff7a3d; --blood:#cf3a4c; --jade:#54d3a6; --violet:#9270ff;
+    --panel:rgba(26,19,32,.86); --panel2:rgba(13,10,19,.94);
+    --line:rgba(243,201,107,.2); --line2:rgba(243,201,107,.45);
+    --shadow:0 26px 60px -24px #000;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --pad-top:env(safe-area-inset-top,0px); --pad-bot:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; min-height:100vh; color:var(--ink); overflow-x:hidden;
+    font-family:Georgia,'Nanum Myeongjo','Apple SD Gothic Neo',system-ui,sans-serif;
+    background:#06050b; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    word-break:keep-all; overflow-wrap:break-word;
+    padding:calc(10px + var(--pad-top)) 12px calc(18px + var(--pad-bot));
+    display:flex; justify-content:center;
+  }
+  /* ── 던전 배경 ───────────────────────────── */
+  .bg{position:fixed;inset:0;z-index:-2;pointer-events:none;
+    background:
+      radial-gradient(820px 420px at 50% -8%, rgba(243,201,107,.16), transparent 62%),
+      radial-gradient(520px 380px at 6% 28%, rgba(255,122,61,.13), transparent 66%),
+      radial-gradient(560px 420px at 96% 34%, rgba(146,112,255,.14), transparent 66%),
+      radial-gradient(700px 500px at 50% 108%, rgba(207,58,76,.13), transparent 70%),
+      linear-gradient(170deg,#0a0812 0%,#120c18 46%,#08060e 100%);
+  }
+  .bg::before{content:"";position:absolute;inset:0;opacity:.5;
+    background-image:
+      repeating-linear-gradient(90deg,rgba(255,255,255,.028) 0 1px,transparent 1px 92px),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.024) 0 1px,transparent 1px 74px);
+    -webkit-mask-image:radial-gradient(circle at 50% 20%,#000 10%,transparent 78%);
+            mask-image:radial-gradient(circle at 50% 20%,#000 10%,transparent 78%);
+  }
+  .embers{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  .embers i{position:absolute;bottom:-24px;width:3px;height:3px;border-radius:50%;
+    background:radial-gradient(circle,#ffcf8a,#ff7a3d 60%,transparent 70%);
+    animation:emberRise linear infinite; opacity:0}
+  @keyframes emberRise{
+    0%{opacity:0;transform:translate3d(0,0,0) scale(.6)}
+    12%{opacity:.9}
+    70%{opacity:.55}
+    100%{opacity:0;transform:translate3d(var(--dx,14px),-96vh,0) scale(1.15)}
+  }
+  #app{width:100%;max-width:760px;position:relative}
+  /* ── 헤더 ──────────────────────────────── */
+  .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand .sigil{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(150deg,rgba(243,201,107,.28),rgba(255,122,61,.16));
+    border:1px solid var(--line2); box-shadow:0 0 22px -8px rgba(243,201,107,.8),inset 0 0 14px rgba(243,201,107,.12);
+    font-size:17px}
+  .brand b{font-size:.86rem;letter-spacing:.14em;color:#e9d9b6;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hud-tools{display:flex;gap:6px;flex:0 0 auto}
+  .icon-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:1rem;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#e8dfd2;transition:.18s;touch-action:manipulation}
+  .icon-btn:hover{background:rgba(255,255,255,.11);border-color:var(--line2)}
+  .icon-btn:active{transform:scale(.94)}
+  .icon-btn[data-off="1"]{color:#7f7488;border-color:rgba(255,255,255,.08)}
+  /* ── 홈 ───────────────────────────────── */
+  .gate{position:relative;overflow:hidden;border-radius:22px;border:1px solid var(--line);
+    min-height:236px;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;
+    background:linear-gradient(160deg,rgba(46,30,48,.92),rgba(10,8,16,.98));
+    box-shadow:var(--shadow),inset 0 0 60px rgba(243,201,107,.06); margin-bottom:12px}
+  .gate .arch{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.98}
+  .gate > *{position:relative;z-index:1}
+  .gate .eyebrow{font-size:.66rem;letter-spacing:.32em;color:var(--gold);text-transform:uppercase}
+  .gate h1{margin:6px 0 4px;font-size:clamp(1.9rem,7.6vw,2.9rem);line-height:1.1;font-weight:800;
+    color:#fff7e8;text-shadow:0 6px 30px rgba(243,201,107,.35),0 2px 0 rgba(0,0,0,.5)}
+  .gate h1 em{font-style:normal;color:var(--gold)}
+  .gate p{margin:0;color:#cfc0cf;font-size:.86rem;line-height:1.62;max-width:430px}
+  .gate .torches{position:absolute;top:14px;left:0;right:0;display:flex;justify-content:space-between;padding:0 18px;z-index:0;pointer-events:none}
+  .torch{width:26px;height:58px;position:relative;opacity:.95}
+  .torch .flame{position:absolute;left:50%;top:0;translate:-50% 0;width:20px;height:26px;border-radius:50% 50% 46% 46%;
+    background:radial-gradient(circle at 50% 70%,#fff3c5 0 18%,#ffc75a 40%,#ff7a3d 70%,rgba(255,70,30,0) 78%);
+    filter:blur(.4px);animation:flick 1.5s ease-in-out infinite alternate}
+  .torch .flame.b{animation-duration:.9s;animation-delay:-.4s}
+  .torch .stick{position:absolute;bottom:0;left:50%;translate:-50% 0;width:4px;height:34px;border-radius:2px;
+    background:linear-gradient(180deg,#5a4128,#2a1c12)}
+  .torch .halo{position:absolute;left:50%;top:2px;translate:-50% 0;width:88px;height:88px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,150,60,.3),transparent 66%);animation:haloPulse 2.6s ease-in-out infinite}
+  @keyframes flick{0%{transform:scale(.92) translateY(1px)}100%{transform:scale(1.06) translateY(-2px)}}
+  @keyframes haloPulse{0%,100%{opacity:.55}50%{opacity:1}}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .actions .wide{grid-column:1/-1}
+  button{font-family:inherit;font-size:.92rem;border-radius:12px;border:1px solid rgba(255,255,255,.13);
+    background:linear-gradient(160deg,rgba(52,40,60,.96),rgba(28,22,34,.96));color:var(--ink);
+    padding:13px 12px;min-height:46px;cursor:pointer;transition:transform .12s,border-color .18s,box-shadow .18s,background .18s;
+    touch-action:manipulation;font-weight:700;letter-spacing:.01em}
+  button:hover:not(:disabled){border-color:var(--line2);background:linear-gradient(160deg,rgba(66,48,72,.96),rgba(36,26,42,.96))}
+  button:active:not(:disabled){transform:translateY(1px) scale(.995)}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  button:disabled{opacity:.38;cursor:default}
+  button.primary{background:linear-gradient(150deg,#f3c96b,#cf7a2a 88%);color:#25170a;border-color:#f7d894;
+    box-shadow:0 14px 30px -16px rgba(243,201,107,.95),inset 0 1px 0 rgba(255,255,255,.5);text-shadow:0 1px 0 rgba(255,255,255,.25)}
+  button.primary:hover:not(:disabled){filter:brightness(1.06)}
+  button.ghost{background:rgba(255,255,255,.045)}
+  .panel{background:linear-gradient(158deg,var(--panel),var(--panel2));border:1px solid rgba(255,255,255,.07);
+    border-radius:16px;padding:15px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .panel .p-title{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:9px}
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .feat{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:11px;padding:11px 7px;text-align:center}
+  .feat b{display:block;color:var(--gold);font-size:.75rem;margin-bottom:3px}
+  .feat span{font-size:.66rem;color:var(--muted)}
+  .hint{color:#c3b6c9;font-size:.8rem;line-height:1.68;margin:0}
+  /* ── 설정 ─────────────────────────────── */
+  .bar-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+  .mini-btn{padding:8px 11px;font-size:.76rem;min-height:38px;border-radius:10px;background:rgba(255,255,255,.045)}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;padding:5px 11px;border-radius:999px;
+    border:1px solid var(--line2);color:var(--gold);background:rgba(243,201,107,.08)}
+  .topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .topic{position:relative;border-radius:13px;padding:13px 8px;text-align:center;cursor:pointer;
+    border:1px solid rgba(255,255,255,.09);background:linear-gradient(160deg,rgba(46,36,54,.9),rgba(24,19,30,.92));
+    transition:.18s var(--ease);touch-action:manipulation}
+  .topic:hover{transform:translateY(-2px);border-color:rgba(243,201,107,.4)}
+  .topic[aria-pressed="true"]{border-color:var(--gold);background:linear-gradient(160deg,rgba(94,66,40,.95),rgba(40,26,22,.95));
+    box-shadow:0 0 0 1px rgba(243,201,107,.35),0 16px 34px -20px rgba(243,201,107,.9)}
+  .topic .ti{font-size:1.5rem;line-height:1.1}
+  .topic .tn{font-size:.84rem;font-weight:800;margin-top:5px;color:#f4ead9}
+  .topic .td{font-size:.64rem;color:var(--muted);margin-top:2px;line-height:1.35}
+  .counts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  /* ── 전투 화면 ─────────────────────────── */
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:8px}
+  .stat-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px}
+  .meter{background:rgba(9,7,14,.72);border:1px solid rgba(255,255,255,.08);border-radius:13px;padding:9px 11px}
+  .meter .lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.68rem;color:var(--muted);margin-bottom:5px;letter-spacing:.04em}
+  .meter .lab .who{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meter .lab b{color:var(--ink);font-weight:700;flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .track{height:9px;border-radius:99px;background:rgba(0,0,0,.62);overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.7)}
+  .fill{height:100%;border-radius:99px;transition:width .5s var(--ease)}
+  .fill.hp{background:linear-gradient(90deg,#7e1f2c,#e1475b 70%,#ff8b9a)}
+  .fill.xp{background:linear-gradient(90deg,#7a5c1c,#f3c96b 70%,#fff0c4);box-shadow:0 0 14px rgba(243,201,107,.62)}
+  .battle{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(30,20,38,.96),rgba(9,7,14,.98));box-shadow:var(--shadow);
+    min-height:206px;padding:14px 14px 12px;display:grid;grid-template-columns:1fr 1.15fr;align-items:end;gap:6px}
+  .battle::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(circle at 50% 0%,rgba(243,201,107,.16),transparent 58%)}
+  .battle::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));pointer-events:none}
+  .battle.shake{animation:shk .38s ease}
+  .battle.hurt{animation:hurt .45s ease}
+  @keyframes shk{0%,100%{transform:translate3d(0,0,0)}20%{transform:translate3d(-5px,2px,0)}
+    45%{transform:translate3d(5px,-2px,0)}70%{transform:translate3d(-3px,1px,0)}}
+  @keyframes hurt{0%,100%{box-shadow:inset 0 0 0 rgba(207,58,76,0)}35%{box-shadow:inset 0 0 70px rgba(207,58,76,.55)}}
+  .fighter{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .fighter svg{display:block;width:100%;height:auto;max-height:150px;filter:drop-shadow(0 12px 18px rgba(0,0,0,.6))}
+  .hero-fig{max-width:132px;margin-left:4px}
+  .mon-fig{max-width:172px;transform-origin:50% 92%;animation:idleB 3.4s ease-in-out infinite}
+  @keyframes idleB{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.015)}}
+  .mon-fig.hit{animation:hitShake .42s ease}
+  @keyframes hitShake{0%{transform:translateX(0) rotate(0)}
+    18%{transform:translateX(-9px) rotate(-4deg) scale(.97);filter:brightness(1.8) saturate(.6)}
+    42%{transform:translateX(8px) rotate(3deg)}66%{transform:translateX(-4px) rotate(-1deg)}100%{transform:translateX(0)}}
+  .mon-fig.die{animation:dieOut .62s ease forwards}
+  @keyframes dieOut{0%{opacity:1;transform:scale(1)}45%{opacity:1;transform:scale(1.06) rotate(3deg);filter:brightness(2.2)}
+    100%{opacity:0;transform:scale(.55) translateY(14px)}}
+  .hero-fig.lunge{animation:lunge .36s ease}
+  @keyframes lunge{0%{transform:translateX(0)}40%{transform:translateX(18px) rotate(-3deg)}100%{transform:translateX(0)}}
+  .hero-fig.block{animation:blockHit .42s ease}
+  @keyframes blockHit{0%{transform:translateX(0)}30%{transform:translateX(-10px);filter:brightness(1.6)}100%{transform:translateX(0)}}
+  .name-tag{font-size:.68rem;letter-spacing:.08em;color:#e6d9c6;background:rgba(6,4,10,.6);
+    border:1px solid rgba(255,255,255,.1);padding:3px 9px;border-radius:99px;white-space:nowrap;max-width:100%;
+    overflow:hidden;text-overflow:ellipsis}
+  .pips{display:flex;gap:4px;margin-top:2px}
+  .pips i{width:16px;height:4px;border-radius:3px;background:rgba(255,255,255,.16);transition:.3s}
+  .pips i.on{background:linear-gradient(90deg,#ff8b9a,#cf3a4c);box-shadow:0 0 8px rgba(207,58,76,.8)}
+  .slash{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0}
+  .slash.go{opacity:1;animation:slashFade .5s ease-out forwards}
+  @keyframes slashFade{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+  .slash svg{position:absolute;right:1%;top:5%;width:45%;height:auto;filter:drop-shadow(0 0 12px rgba(255,209,102,.75));
+    animation:slashSweep .42s cubic-bezier(.2,.8,.3,1)}
+  @keyframes slashSweep{0%{transform:scale(.86) rotate(-6deg);opacity:0}30%{opacity:1}100%{transform:scale(1.04) rotate(2deg);opacity:.9}}
+  .float{position:absolute;z-index:4;font-weight:800;font-size:1.16rem;pointer-events:none;
+    text-shadow:0 2px 10px rgba(0,0,0,.85);animation:floatUp .95s cubic-bezier(.2,.7,.3,1) forwards;white-space:nowrap}
+  @keyframes floatUp{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}
+    22%{opacity:1;transform:translate(-50%,-6px) scale(1.14)}
+    100%{opacity:0;transform:translate(-50%,-58px) scale(1)}}
+  .float.dmg{color:#ffd9dd;right:24%;bottom:46%}
+  .float.crit{color:#ffd166;font-size:1.34rem;right:22%;bottom:62%;letter-spacing:.04em;
+    text-shadow:0 2px 12px rgba(0,0,0,.9),0 0 18px rgba(255,180,80,.55)}
+  .float.gain{color:#9cf2c9;left:20%;bottom:66%;font-size:.92rem}
+  .float.miss{color:#ffb3bd;font-size:.92rem;left:52%;bottom:50%}
+  .combo{position:absolute;left:12px;top:10px;z-index:5;display:inline-flex;align-items:center;gap:5px;
+    font-size:.76rem;font-weight:800;color:#ffd9a8;padding:4px 10px;border-radius:99px;
+    background:linear-gradient(120deg,rgba(255,122,61,.34),rgba(243,201,107,.18));
+    border:1px solid rgba(255,160,80,.55);box-shadow:0 0 20px rgba(255,122,61,.45);
+    opacity:0;transform:translateY(-6px) scale(.9);transition:.25s var(--ease)}
+  .combo.on{opacity:1;transform:none;animation:comboPulse 1.1s ease-in-out infinite}
+  @keyframes comboPulse{0%,100%{box-shadow:0 0 12px rgba(255,122,61,.35)}50%{box-shadow:0 0 26px rgba(255,122,61,.75)}}
+  /* ── 문제 패널 ─────────────────────────── */
+  .quest{border-radius:16px;border:1px solid rgba(255,255,255,.08);margin-top:9px;padding:15px 15px 14px;
+    background:linear-gradient(158deg,rgba(32,24,40,.97),rgba(13,10,20,.98));box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .quest::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:radial-gradient(circle at 50% -30%,rgba(243,201,107,.16),transparent 60%)}
+  .q-kind{display:flex;align-items:center;gap:6px;font-size:.68rem;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
+  .q-text{position:relative;font-size:clamp(1.12rem,4.6vw,1.5rem);line-height:1.55;font-weight:700;margin:10px 0 13px;
+    color:#fdf6ea;word-break:keep-all;text-shadow:0 2px 14px rgba(0,0,0,.7)}
+  .answer-row{display:flex;gap:8px}
+  input[type=text]{flex:1;min-width:0;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(5,4,9,.86);color:#fff8ec;font-family:inherit;font-size:1.1rem;text-align:center;outline:none;
+    transition:.18s;box-shadow:inset 0 2px 8px rgba(0,0,0,.6)}
+  input[type=text]::placeholder{color:#7d7189;font-size:.92rem}
+  input[type=text]:focus{border-color:var(--gold);box-shadow:inset 0 2px 8px rgba(0,0,0,.6),0 0 0 3px rgba(243,201,107,.16)}
+  .answer-row button{flex:0 0 auto;min-width:104px}
+  .feedback{min-height:24px;margin-top:9px;font-size:.83rem;color:var(--muted);line-height:1.5}
+  .feedback.ok{color:#8ef0c0}
+  .feedback.no{color:#ff9dab}
+  .progress{height:5px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden;margin:0 0 9px}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,#cf7a2a,#f3c96b);transition:width .4s var(--ease)}
+  /* ── 결과 ─────────────────────────────── */
+  .result-hero{position:relative;border-radius:22px;padding:26px 20px;text-align:center;overflow:hidden;
+    border:1px solid var(--line2);background:linear-gradient(165deg,rgba(58,38,30,.96),rgba(12,9,16,.98));box-shadow:var(--shadow)}
+  .result-hero .glow{position:absolute;left:50%;top:-60%;width:420px;height:420px;translate:-50% 0;border-radius:50%;
+    background:radial-gradient(circle,rgba(243,201,107,.32),transparent 66%);animation:haloPulse 3s ease-in-out infinite}
+  .result-hero h2{margin:0 0 4px;font-size:clamp(1.5rem,6vw,2.1rem);color:#fff6e4;position:relative}
+  .result-hero p{margin:0;color:#d6c6c6;font-size:.85rem;position:relative}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+  .stat{border:1px solid rgba(255,255,255,.09);border-radius:13px;padding:12px;background:rgba(255,255,255,.035)}
+  .stat b{display:block;font-size:.66rem;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:5px}
+  .stat span{font-size:1.06rem;font-weight:800;color:#fdf6ea}
+  .detail-list{margin:8px 0 0;padding-left:17px;color:#cbc0d2;font-size:.82rem;line-height:1.72}
+  .detail-list li::marker{color:var(--gold)}
+  #toast{position:fixed;left:50%;bottom:calc(18px + var(--pad-bot));translate:-50% 0;z-index:50;
+    background:rgba(30,20,32,.96);border:1px solid var(--line2);color:var(--gold);padding:9px 16px;border-radius:99px;
+    font-size:.8rem;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translate(-50%,8px)}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .fade-in{animation:fadeIn .34s var(--ease) both}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media(max-width:430px){
+    .actions{grid-template-columns:1fr}
+    .actions .wide{grid-column:auto}
+    .topic-grid{grid-template-columns:1fr 1fr}
+    .feats{grid-template-columns:1fr 1fr}
+    .battle{grid-template-columns:1fr 1.25fr;min-height:184px;padding:11px}
+    .hero-fig{max-width:104px}
+    .mon-fig{max-width:140px}
+    .q-text{font-size:1.06rem}
+    .answer-row{flex-direction:column}
+    .answer-row button{width:100%;min-height:48px}
+    input[type=text]{padding:13px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  }
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="embers" id="embers" aria-hidden="true"></div>
+<div id="app">
+  <div class="hud">
+    <div class="brand"><span class="sigil">🗝️</span><b>수학 던전 · MATH DUNGEON</b></div>
+    <div class="hud-tools">
+      <button class="icon-btn" id="muteBtn" title="효과음" aria-label="효과음 켜기/끄기">🔊</button>
+      <button class="icon-btn" id="homeIco" title="홈" aria-label="홈으로">⌂</button>
+    </div>
+  </div>
+  <div id="stage"></div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ══════════ 문제 데이터 (기존과 동일) ══════════ */
+const TOPICS = {
+  add:{name:"덧셈", icon:"➕", desc:"두 자리 수 더하기", make(){
+    const a=rand(10,99), b=rand(10,99); return {q:`${a} + ${b} = ?`, a:a+b};
+  }},
+  sub:{name:"뺄셈", icon:"➖", desc:"큰 수에서 빼기", make(){
+    const a=rand(30,150), b=rand(10,a); return {q:`${a} - ${b} = ?`, a:a-b};
+  }},
+  mul:{name:"곱셈", icon:"✖️", desc:"구구단 도전", make(){
+    const a=rand(2,12), b=rand(2,12); return {q:`${a} × ${b} = ?`, a:a*b};
+  }},
+  div:{name:"나눗셈", icon:"➗", desc:"나누어 떨어지는 계산", make(){
+    const b=rand(2,12), ans=rand(2,12), a=b*ans; return {q:`${a} ÷ ${b} = ?`, a:ans};
+  }},
+  frac:{name:"분수", icon:"🍕", desc:"분수의 기초", make(){
+    const den=rand(2,10), num=rand(1,den-1); return {q:`피자를 ${den}조각으로 나눴습니다. ${num}조각은 전체의 얼마일까요? (예: ${num}/${den})`, a:`${num}/${den}`};
+  }},
+  mixed:{name:"종합", icon:"🏆", desc:"여러 문제를 골고루", make(){
+    return [TOPICS.add,TOPICS.sub,TOPICS.mul,TOPICS.div][rand(0,3)].make();
+  }}
+};
+
+let player=null, question=null, questionNo=0, score=0, streak=0, total=10, topicKey="mixed";
+let bestStreak=0, correctCount=0, lastResult=null;
+const stage=document.getElementById("stage");
+const toastEl=document.getElementById("toast");
+
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.classList.remove("show"),1600);}
+
+/* ══════════ 저장 (기존 키/형식 유지) ══════════ */
+function save(){try{localStorage.setItem("math-dungeon-save",JSON.stringify({player,questionNo,score,streak,topicKey,total}));}catch(e){}}
+function loadSave(){try{const x=localStorage.getItem("math-dungeon-save");return x?JSON.parse(x):null;}catch(e){return null;}}
+function clearSave(){try{localStorage.removeItem("math-dungeon-save");}catch(e){}}
+function xpNext(){return 100 + (player.level-1)*50;}
+function levelUp(){
+  let leveled=false;
+  while(player.xp>=xpNext()){
+    player.xp-=xpNext();
+    player.level++;
+    player.maxHp+=10;
+    player.hp=player.maxHp;
+    leveled=true;
+  }
+  if(leveled){ sfx.level(); toast(`✨ 레벨 업! Lv.${player.level}`); }
+  return leveled;
+}
+
+/* ══════════ 사운드 (Web Audio) ══════════ */
+let actx=null;
+let muted=false;
+try{ muted = localStorage.getItem("math-dungeon-mute")==="1"; }catch(e){}
+function ac(){
+  if(!actx){
+    try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; }
+  }
+  if(actx && actx.state==="suspended"){ try{actx.resume();}catch(e){} }
+  return actx;
+}
+function tone(freq,dur,type,vol,slideTo,delay){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t0=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(freq,t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),t0+dur);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.16:vol,t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+dur+0.02);
+}
+function noise(dur,vol,hp){
+  if(muted) return; const c=ac(); if(!c) return;
+  const len=Math.max(1,Math.floor(c.sampleRate*dur));
+  const buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++){ d[i]=(Math.random()*2-1)*(1-i/len); }
+  const src=c.createBufferSource(); src.buffer=buf;
+  const f=c.createBiquadFilter(); f.type="bandpass"; f.frequency.value=hp||1800; f.Q.value=1.1;
+  const g=c.createGain(); g.gain.setValueAtTime(vol==null?.2:vol,c.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);
+  src.connect(f).connect(g).connect(c.destination); src.start();
+}
+const sfx={
+  slash(){ noise(.22,.16,2600); tone(760,.12,"triangle",.1,320); },
+  hit(){ noise(.16,.18,700); tone(150,.2,"sine",.2,70); },
+  correct(){ tone(660,.1,"triangle",.14); tone(880,.12,"triangle",.12,null,.08); tone(1180,.16,"triangle",.1,null,.16); },
+  wrong(){ tone(190,.22,"sawtooth",.13,120); tone(120,.28,"sine",.1,70,.06); },
+  level(){ [523,659,784,1047].forEach((f,i)=>tone(f,.2,"triangle",.13,null,i*0.085)); },
+  win(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,.34,"triangle",.12,null,i*0.1)); },
+  select(){ tone(520,.06,"triangle",.07); }
+};
+function syncMute(){
+  const b=document.getElementById("muteBtn"); if(!b) return;
+  b.textContent = muted?"🔇":"🔊";
+  b.setAttribute("data-off", muted?"1":"0");
+  b.setAttribute("aria-label", muted?"효과음 켜기":"효과음 끄기");
+}
+document.getElementById("muteBtn").addEventListener("click",()=>{
+  muted=!muted;
+  try{ localStorage.setItem("math-dungeon-mute", muted?"1":"0"); }catch(e){}
+  syncMute(); if(!muted) sfx.select();
+  toast(muted?"🔇 효과음 꺼짐":"🔊 효과음 켜짐");
+});
+document.getElementById("homeIco").addEventListener("click",()=>{
+  if(player && questionNo>0 && questionNo<=total){ save(); }
+  renderHome();
+});
+syncMute();
+
+/* ══════════ SVG 아트 ══════════ */
+const ART = {
+  hero: `<svg viewBox="0 0 120 150" role="img" aria-label="모험가">
+    <defs>
+      <linearGradient id="cape" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8c2d3c"/><stop offset="1" stop-color="#4a1420"/></linearGradient>
+      <linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9d6e6"/><stop offset=".5" stop-color="#8a9bb4"/><stop offset="1" stop-color="#55637c"/></linearGradient>
+      <linearGradient id="goldg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe6a4"/><stop offset="1" stop-color="#c9922f"/></linearGradient>
+      <linearGradient id="blade" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef6ff"/><stop offset="1" stop-color="#9fc4e8"/></linearGradient>
+    </defs>
+    <ellipse cx="60" cy="144" rx="30" ry="5" fill="#000" opacity=".45"/>
+    <path d="M40 52 Q26 96 30 138 L52 138 Q46 96 56 60 Z" fill="url(#cape)" opacity=".92"/>
+    <path d="M46 58 L70 58 L74 96 L52 96 Z" fill="url(#armor)" stroke="#3d485c" stroke-width="1.4"/>
+    <path d="M50 96 L70 96 L68 112 L52 112 Z" fill="#4a5670"/>
+    <rect x="52" y="112" width="7" height="24" rx="3" fill="#6b7891"/>
+    <rect x="63" y="112" width="7" height="24" rx="3" fill="#6b7891"/>
+    <rect x="50" y="134" width="11" height="7" rx="3" fill="#3f2a1c"/>
+    <rect x="63" y="134" width="11" height="7" rx="3" fill="#3f2a1c"/>
+    <circle cx="58" cy="40" r="16" fill="#e8c9a8" stroke="#b98f6b" stroke-width="1.3"/>
+    <path d="M42 38 Q44 18 58 18 Q72 18 74 38 Q66 30 58 30 Q50 30 42 38Z" fill="#8a99b5" stroke="#4a5670" stroke-width="1.2"/>
+    <path d="M58 18 Q58 8 66 4 Q64 14 58 18Z" fill="#cf3a4c"/>
+    <circle cx="52" cy="40" r="2" fill="#2a2233"/><circle cx="64" cy="40" r="2" fill="#2a2233"/>
+    <path d="M53 47 Q58 51 63 47" stroke="#8a6a52" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M40 46 L74 46 L72 58 L42 58 Z" fill="url(#goldg)" opacity=".0"/>
+    <path d="M74 60 L96 30" stroke="#5a4630" stroke-width="4" stroke-linecap="round"/>
+    <path d="M74 60 L98 26" stroke="url(#blade)" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M78 56 L84 62" stroke="#c9922f" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="74" cy="60" r="3.2" fill="#f3c96b"/>
+    <path d="M40 62 Q30 70 30 84 L44 88 L46 66 Z" fill="url(#armor)" stroke="#3d485c" stroke-width="1.2"/>
+    <path d="M32 58 Q42 58 46 64 L44 76 Q34 76 30 70 Z" fill="url(#goldg)" stroke="#a8781f" stroke-width="1"/>
+    <circle cx="38" cy="67" r="4" fill="#8c2d3c" opacity=".85"/>
+  </svg>`,
+
+  monsters:[
+    {name:"점액 슬라임", svg:`<svg viewBox="0 0 200 170" role="img" aria-label="점액 슬라임">
+      <defs><radialGradient id="sl" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#b6ff9d"/><stop offset=".55" stop-color="#4fc46b"/><stop offset="1" stop-color="#1d6b3b"/></radialGradient></defs>
+      <ellipse cx="100" cy="160" rx="62" ry="8" fill="#000" opacity=".4"/>
+      <path d="M38 158 Q30 112 52 88 Q72 66 100 66 Q128 66 148 88 Q170 112 162 158 Q140 168 100 168 Q60 168 38 158Z" fill="url(#sl)" stroke="#0f4a28" stroke-width="2"/>
+      <ellipse cx="78" cy="104" rx="16" ry="18" fill="#effff0" opacity=".92"/><ellipse cx="122" cy="104" rx="16" ry="18" fill="#effff0" opacity=".92"/>
+      <circle cx="80" cy="108" r="7.5" fill="#123a22"/><circle cx="120" cy="108" r="7.5" fill="#123a22"/>
+      <circle cx="77" cy="104" r="2.6" fill="#fff"/><circle cx="117" cy="104" r="2.6" fill="#fff"/>
+      <path d="M84 134 Q100 148 116 134" stroke="#123a22" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <circle cx="150" cy="126" r="7" fill="#9bff8b" opacity=".55"/><circle cx="58" cy="132" r="5" fill="#9bff8b" opacity=".45"/>
+    </svg>`},
+    {name:"동굴 고블린", svg:`<svg viewBox="0 0 200 180" role="img" aria-label="동굴 고블린">
+      <defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fb36a"/><stop offset="1" stop-color="#4e6f3c"/></linearGradient></defs>
+      <ellipse cx="100" cy="170" rx="56" ry="7" fill="#000" opacity=".4"/>
+      <path d="M78 150 L72 172 L88 172 L92 152Z" fill="#3b5231"/><path d="M108 150 L112 172 L128 172 L122 152Z" fill="#3b5231"/>
+      <path d="M70 96 Q70 62 100 62 Q130 62 130 96 L126 146 Q100 156 74 146Z" fill="url(#gb)" stroke="#2f4526" stroke-width="2"/>
+      <path d="M70 100 Q52 104 48 120 Q52 128 62 124 L74 116Z" fill="#6d9150" stroke="#2f4526" stroke-width="2"/>
+      <path d="M130 100 Q148 104 152 120 Q148 128 138 124 L126 116Z" fill="#6d9150" stroke="#2f4526" stroke-width="2"/>
+      <ellipse cx="100" cy="86" rx="34" ry="30" fill="#9dc178" stroke="#2f4526" stroke-width="2"/>
+      <path d="M74 66 L58 34 L86 56Z" fill="#9dc178" stroke="#2f4526" stroke-width="2"/>
+      <path d="M126 66 L142 34 L114 56Z" fill="#9dc178" stroke="#2f4526" stroke-width="2"/>
+      <ellipse cx="86" cy="84" rx="8" ry="9" fill="#fff8c9"/><ellipse cx="114" cy="84" rx="8" ry="9" fill="#fff8c9"/>
+      <circle cx="87" cy="86" r="3.4" fill="#20240f"/><circle cx="113" cy="86" r="3.4" fill="#20240f"/>
+      <path d="M92 100 Q100 108 108 100" stroke="#2f4526" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M92 100 L94 108 L98 101" fill="#fff8c9" stroke="#2f4526" stroke-width="1.2"/>
+      <path d="M108 100 L106 108 L102 101" fill="#fff8c9" stroke="#2f4526" stroke-width="1.2"/>
+      <path d="M100 128 Q84 124 76 132 Q88 142 100 138 Q112 142 124 132 Q116 124 100 128Z" fill="#3b5231" opacity=".55"/>
+      <rect x="132" y="118" width="8" height="46" rx="4" fill="#6a4a2a" transform="rotate(16 136 141)"/>
+      <path d="M126 108 L146 100 L152 116 L132 124Z" fill="#8c9aa8" stroke="#465061" stroke-width="1.5"/>
+    </svg>`},
+    {name:"해골 기사", svg:`<svg viewBox="0 0 200 180" role="img" aria-label="해골 기사">
+      <defs><linearGradient id="bn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0e8d2"/><stop offset="1" stop-color="#a99a7c"/></linearGradient>
+      <linearGradient id="st" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a7488"/><stop offset="1" stop-color="#333b4d"/></linearGradient></defs>
+      <ellipse cx="100" cy="172" rx="52" ry="7" fill="#000" opacity=".45"/>
+      <path d="M84 150 L80 172 L98 172 L99 150Z" fill="url(#bn)"/><path d="M104 150 L105 172 L124 172 L118 150Z" fill="url(#bn)"/>
+      <path d="M74 84 L126 84 L130 148 L70 148Z" fill="url(#st)" stroke="#232a36" stroke-width="2"/>
+      <path d="M88 90 L112 90 M86 104 L114 104 M86 118 L114 118" stroke="#8d97ab" stroke-width="3" opacity=".7"/>
+      <path d="M100 84 L100 148" stroke="#232a36" stroke-width="2"/>
+      <ellipse cx="100" cy="62" rx="30" ry="30" fill="url(#bn)" stroke="#8c7f66" stroke-width="2"/>
+      <path d="M74 52 Q100 30 126 52 L124 44 Q100 22 76 44Z" fill="#8c7f66"/>
+      <ellipse cx="88" cy="60" rx="9" ry="10" fill="#1b1f27"/><ellipse cx="112" cy="60" rx="9" ry="10" fill="#1b1f27"/>
+      <circle cx="88" cy="60" r="4.4" fill="#65e0ff"/><circle cx="112" cy="60" r="4.4" fill="#65e0ff"/>
+      <circle cx="88" cy="60" r="9" fill="#65e0ff" opacity=".25"/><circle cx="112" cy="60" r="9" fill="#65e0ff" opacity=".25"/>
+      <path d="M100 70 L96 82 L104 82Z" fill="#1b1f27"/>
+      <path d="M86 88 L114 88 M90 92 L110 92" stroke="#8c7f66" stroke-width="2"/>
+      <path d="M70 88 Q52 96 50 112 Q56 120 66 112 L74 100Z" fill="url(#st)" stroke="#232a36" stroke-width="2"/>
+      <path d="M130 88 Q152 84 162 66" stroke="#5c4630" stroke-width="6" stroke-linecap="round"/>
+      <path d="M158 62 L176 40 L184 52 L166 74Z" fill="#c3cfe0" stroke="#6f7d92" stroke-width="1.6"/>
+      <path d="M132 88 Q146 96 148 112 Q142 120 132 112 L126 100Z" fill="url(#st)" stroke="#232a36" stroke-width="2"/>
+      <circle cx="100" cy="126" r="8" fill="#333b4d" stroke="#8d97ab" stroke-width="1.5"/>
+      <circle cx="100" cy="126" r="3" fill="#65e0ff" opacity=".8"/>
+    </svg>`},
+    {name:"심연 망령", svg:`<svg viewBox="0 0 200 190" role="img" aria-label="심연 망령">
+      <defs>
+        <linearGradient id="gh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48cff"/><stop offset=".55" stop-color="#6b39c9"/><stop offset="1" stop-color="#2a1650"/></linearGradient>
+        <radialGradient id="aur" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#c9a6ff" stop-opacity=".5"/><stop offset="1" stop-color="#c9a6ff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <ellipse cx="100" cy="184" rx="46" ry="7" fill="#000" opacity=".4"/>
+      <circle cx="100" cy="96" r="66" fill="url(#aur)"/>
+      <path d="M100 30 Q148 44 150 100 Q150 140 132 162 Q124 150 122 132 Q116 156 104 174 Q100 152 96 132 Q84 156 72 168 Q76 140 68 122 Q62 146 50 158 Q46 122 50 100 Q52 44 100 30Z"
+        fill="url(#gh)" opacity=".92" stroke="#3a1f6b" stroke-width="1.5"/>
+      <path d="M80 78 Q100 66 120 78 Q122 100 100 104 Q78 100 80 78Z" fill="#150a2b" opacity=".8"/>
+      <circle cx="90" cy="84" r="5" fill="#8ef0ff"/><circle cx="110" cy="84" r="5" fill="#8ef0ff"/>
+      <circle cx="90" cy="84" r="11" fill="#8ef0ff" opacity=".22"/><circle cx="110" cy="84" r="11" fill="#8ef0ff" opacity=".22"/>
+      <path d="M92 96 Q100 100 108 96" stroke="#c9a6ff" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M60 60 Q74 48 86 46" stroke="#d9c2ff" stroke-width="2.4" fill="none" opacity=".6" stroke-linecap="round"/>
+      <circle cx="146" cy="120" r="4" fill="#b48cff" opacity=".8"/><circle cx="56" cy="134" r="3.4" fill="#b48cff" opacity=".7"/>
+      <circle cx="140" cy="70" r="2.6" fill="#8ef0ff" opacity=".8"/><circle cx="64" cy="92" r="2.4" fill="#8ef0ff" opacity=".6"/>
+    </svg>`},
+    {name:"고대 드래곤", svg:`<svg viewBox="0 0 220 190" role="img" aria-label="고대 드래곤">
+      <defs>
+        <linearGradient id="dr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a63b3b"/><stop offset=".5" stop-color="#7a1f2c"/><stop offset="1" stop-color="#3d0e19"/></linearGradient>
+        <linearGradient id="wg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9564a"/><stop offset="1" stop-color="#5c1520"/></linearGradient>
+        <radialGradient id="fire" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6c9"/><stop offset=".5" stop-color="#ff9d3d" stop-opacity=".8"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
+      </defs>
+      <ellipse cx="110" cy="184" rx="64" ry="8" fill="#000" opacity=".45"/>
+      <path d="M46 96 Q10 60 26 34 Q52 58 66 80Z" fill="url(#wg)" stroke="#3d0e19" stroke-width="2"/>
+      <path d="M180 96 Q216 58 198 32 Q172 58 158 80Z" fill="url(#wg)" stroke="#3d0e19" stroke-width="2"/>
+      <path d="M56 170 Q60 120 96 104 Q132 88 162 110 Q186 130 184 170 Q140 180 100 180Z" fill="url(#dr)" stroke="#3d0e19" stroke-width="2"/>
+      <path d="M100 120 Q110 140 104 168" stroke="#3d0e19" stroke-width="2" opacity=".5" fill="none"/>
+      <path d="M140 116 Q148 138 144 170" stroke="#3d0e19" stroke-width="2" opacity=".5" fill="none"/>
+      <path d="M152 108 Q178 96 190 74 Q196 88 186 104 Q176 120 158 122Z" fill="#8d2534" stroke="#3d0e19" stroke-width="2"/>
+      <ellipse cx="176" cy="86" rx="30" ry="24" fill="#9a2b36" stroke="#3d0e19" stroke-width="2"/>
+      <path d="M196 78 Q212 72 210 86 Q206 96 194 94Z" fill="#9a2b36" stroke="#3d0e19" stroke-width="2"/>
+      <circle cx="206" cy="84" r="1.8" fill="#3d0e19"/>
+      <ellipse cx="184" cy="78" rx="7" ry="6" fill="#ffe9a3"/><circle cx="185" cy="78" r="3.6" fill="#22100f"/>
+      <path d="M164 66 Q170 48 182 56" stroke="#c9922f" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M186 64 Q188 46 198 54" stroke="#c9922f" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M60 150 Q30 150 22 128 Q44 138 62 132Z" fill="#7a1f2c" stroke="#3d0e19" stroke-width="2"/>
+      <circle cx="196" cy="92" r="26" fill="url(#fire)" opacity=".22"/>
+      <path d="M118 106 L124 92 L132 106 M136 108 L142 96 L148 110" stroke="#3d0e19" stroke-width="2" fill="none" opacity=".55"/>
+    </svg>`}
+  ]
+};
+
+const SLASH_SVG = `<svg viewBox="0 0 240 170" aria-hidden="true">
+  <defs>
+    <linearGradient id="sg" gradientUnits="userSpaceOnUse" x1="14" y1="156" x2="228" y2="18">
+      <stop offset="0" stop-color="#fff3cd" stop-opacity="0"/>
+      <stop offset=".35" stop-color="#fffdf4" stop-opacity=".9"/>
+      <stop offset=".72" stop-color="#ffffff" stop-opacity=".85"/>
+      <stop offset="1" stop-color="#ffd166" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="sgl" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
+  </defs>
+  <path d="M8 156 Q126 58 230 16 Q122 104 8 156 Z" fill="#ffce6b" opacity=".3" filter="url(#sgl)"/>
+  <path d="M8 156 Q126 58 230 16 Q122 104 8 156 Z" fill="url(#sg)"/>
+  <path d="M30 143 Q132 76 212 33" stroke="#ffffff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".95"/>
+</svg>`;
+
+function monsterSVG(tier){ return ART.monsters[Math.max(0,Math.min(4,tier))].svg; }
+function monsterName(tier){ return ART.monsters[Math.max(0,Math.min(4,tier))].name; }
+
+/* ══════════ 렌더 ══════════ */
+function render(){
+  if(!player){ renderHome(); return; }
+  if(questionNo>total){ renderResult(); return; }
+  renderQuestion();
+}
+
+function renderHome(){
+  const s=loadSave();
+  player=null;
+  const savedLine = s && s.player ? `<p class="hint" style="margin-top:10px">💾 저장된 모험: Lv.${s.player.level} · 문제 ${s.questionNo}/${s.total||10} · 점수 ${s.score||0}</p>`:"";
+  stage.innerHTML=`
+    <div class="gate fade-in">
+      <svg class="arch" viewBox="0 0 760 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2434"/><stop offset="1" stop-color="#0b0810"/></linearGradient>
+          <radialGradient id="door" cx=".5" cy=".86" r=".72">
+            <stop offset="0" stop-color="#ffc785" stop-opacity=".5"/>
+            <stop offset=".5" stop-color="#a95c26" stop-opacity=".22"/>
+            <stop offset="1" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <pattern id="brick" width="86" height="40" patternUnits="userSpaceOnUse">
+            <path d="M0 0 H86 M0 20 H86" stroke="#3b3044" stroke-width="1.3"/>
+            <path d="M0 0 V20 M43 20 V40" stroke="#3b3044" stroke-width="1.3"/>
+          </pattern>
+        </defs>
+        <rect width="760" height="260" fill="url(#stone)"/>
+        <rect width="760" height="200" fill="url(#brick)" opacity=".5"/>
+        <path d="M0 200 H760 V260 H0Z" fill="#0a0710"/>
+        <path d="M298 260 V152 Q380 68 462 152 V260Z" fill="#05040a"/>
+        <path d="M298 260 V152 Q380 68 462 152 V260Z" fill="url(#door)"/>
+        <path d="M298 260 V152 Q380 68 462 152 V260" fill="none" stroke="#f3c96b" stroke-width="2.2" opacity=".45"/>
+        <path d="M362 84 L398 84 L403 102 L357 102Z" fill="#3d3024" stroke="#7a5c34" stroke-width="1.4"/>
+        <path d="M0 200 H760" stroke="#4a3a2a" stroke-width="2" opacity=".7"/>
+      </svg>
+      <div class="torches">
+        <div class="torch"><span class="halo"></span><span class="flame"></span><span class="stick"></span></div>
+        <div class="torch"><span class="halo"></span><span class="flame b"></span><span class="stick"></span></div>
+      </div>
+      <div class="eyebrow">Elementary Math Adventure</div>
+      <h1>수학 <em>던전</em></h1>
+      <p>몬스터를 물리치려면 수학 문제를 풀어야 합니다. 정답 한 번이 검격 한 번, 틀리면 반격이 돌아옵니다.</p>
+    </div>
+    <div class="actions">
+      <button class="primary wide" id="newBtn">⚔️ 새로운 모험 시작</button>
+      <button id="resumeBtn" ${s?"":"disabled"}>▶️ 이어하기</button>
+      <button class="ghost" id="detailBtn">📜 게임 설명</button>
+    </div>
+    <div class="panel">
+      <div class="p-title">이 던전의 규칙</div>
+      <div class="feats">
+        <div class="feat"><b>초등 수학</b><span>계산 · 분수</span></div>
+        <div class="feat"><b>RPG 성장</b><span>XP · 레벨업</span></div>
+        <div class="feat"><b>10·15문제</b><span>한 판 완주</span></div>
+      </div>
+      ${savedLine}
+    </div>
+    <div class="panel">
+      <div class="p-title">플레이 방법</div>
+      <p class="hint">문제를 보고 답을 입력한 뒤 <b>정답 제출</b>을 누르세요. 정답이면 검격이 몬스터에게 꽂히고 XP·골드를 얻습니다. 오답이면 몬스터의 반격으로 HP가 줄지만, 바로 다음 문제로 넘어갑니다. 3연속 정답마다 몬스터를 한 마리 처치하고 다음 층으로 내려갑니다.</p>
+    </div>`;
+  document.getElementById("newBtn").addEventListener("click",renderSetup);
+  const rb=document.getElementById("resumeBtn");
+  rb.addEventListener("click",()=>{ if(s) resume(s); });
+  document.getElementById("detailBtn").addEventListener("click",renderDetails);
+}
+
+function renderSetup(){
+  stage.innerHTML=`
+    <div class="bar-row">
+      <button class="mini-btn" id="back">← 홈</button>
+      <span class="chip">🕯️ 모험 설정</span>
+    </div>
+    <div class="panel fade-in">
+      <div class="p-title">문제 종류 선택</div>
+      <div class="topic-grid" id="topicGrid">
+        ${Object.entries(TOPICS).map(([k,t])=>`<button class="topic" data-topic="${k}" aria-pressed="${k===topicKey?"true":"false"}">
+          <div class="ti">${t.icon}</div><div class="tn">${t.name}</div><div class="td">${t.desc}</div>
+        </button>`).join("")}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="p-title">코스 길이</div>
+      <div class="counts">
+        <button data-count="10">🌱 10문제</button>
+        <button data-count="15">🔥 15문제</button>
+      </div>
+      <p class="hint" style="margin-top:10px">문제가 많을수록 더 깊은 층까지 내려가고, 레벨과 골드도 더 많이 쌓입니다.</p>
+    </div>`;
+  document.getElementById("back").addEventListener("click",renderHome);
+  stage.querySelectorAll("[data-topic]").forEach(el=>el.addEventListener("click",()=>{
+    topicKey=el.dataset.topic;
+    stage.querySelectorAll("[data-topic]").forEach(x=>x.setAttribute("aria-pressed", x===el?"true":"false"));
+    sfx.select();
+  }));
+  stage.querySelectorAll("[data-count]").forEach(el=>el.addEventListener("click",()=>{ ac(); startGame(Number(el.dataset.count)); }));
+}
+
+function startGame(count){
+  player={name:"수학 모험가",level:1,xp:0,maxHp:100,hp:100,gold:0};
+  total=count;questionNo=1;score=0;streak=0;correctCount=0;bestStreak=0;
+  newQuestion();
+}
+function resume(s){
+  player=s.player;questionNo=s.questionNo;score=s.score;streak=s.streak;topicKey=s.topicKey||"mixed";total=s.total||10;
+  correctCount=0;bestStreak=s.streak||0;
+  if(questionNo>total){renderResult();return;}
+  newQuestion();
+}
+function newQuestion(){
+  question=TOPICS[topicKey].make();
+  renderQuestion();
+}
+
+function bar(cls,pct){ return `<div class="track"><div class="fill ${cls}" style="width:${Math.max(0,Math.min(100,pct))}%"></div></div>`; }
+
+function hpPct(){ return Math.max(0,Math.min(100, player.hp/100*100)); }
+
+function renderQuestion(){
+  const tier=Math.min(4,Math.floor((questionNo-1)/3));
+  const hits=(questionNo-1)%3;                       // 이 몬스터에게 이미 넣은 타격
+  const remainPips=[0,1,2].map(i=>`<i class="${i<hits?"":"on"}"></i>`).join("");
+  const progress=((questionNo-1)/total)*100;
+  stage.innerHTML=`
+    <div class="topline">
+      <span class="chip">🗝️ 문제 ${questionNo} / ${total}</span>
+      <div style="display:flex;gap:6px">
+        <button class="mini-btn" id="saveBtn">💾 저장</button>
+      </div>
+    </div>
+    <div class="progress"><i style="width:${progress}%"></i></div>
+    <div class="stat-strip">
+      <div class="meter">
+        <div class="lab"><span class="who">❤️ HP</span><b>${player.hp}/100</b></div>
+        ${bar("hp",hpPct())}
+      </div>
+      <div class="meter">
+        <div class="lab"><span class="who">✨ XP</span><b>${player.xp}/${xpNext()}</b></div>
+        ${bar("xp",player.xp/xpNext()*100)}
+      </div>
+    </div>
+
+    <div class="battle" id="battle">
+      <div class="combo ${streak>=2?"on":""}" id="combo">🔥 ${streak} 콤보</div>
+      <div class="fighter hero-side">
+        <div class="hero-fig" id="heroFig">${ART.hero}</div>
+        <span class="name-tag">🧙 수학 모험가 · Lv.${player.level}</span>
+      </div>
+      <div class="fighter mon-side">
+        <div class="mon-fig" id="monFig">${monsterSVG(tier)}</div>
+        <span class="name-tag">💀 ${monsterName(tier)}</span>
+        <div class="pips" id="pips">${remainPips}</div>
+      </div>
+      <div class="slash" id="slash">${SLASH_SVG}</div>
+      <div id="fx"></div>
+    </div>
+
+    <div class="quest">
+      <div class="q-kind">${TOPICS[topicKey].icon} ${TOPICS[topicKey].name} · ${tier+1}층</div>
+      <div class="q-text">${question.q}</div>
+      <div class="answer-row">
+        <input id="answer" type="text" inputmode="text" autocomplete="off" enterkeyhint="go" placeholder="정답을 입력하세요" aria-label="정답 입력">
+        <button class="primary" id="submit">⚔️ 정답 제출</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>`;
+
+  const input=document.getElementById("answer");
+  document.getElementById("saveBtn").addEventListener("click",()=>{save();toast("💾 진행 상황을 저장했습니다.");});
+  document.getElementById("submit").addEventListener("click",submitAnswer);
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submitAnswer(); } });
+  setTimeout(()=>{ try{input.focus({preventScroll:true});}catch(e){input.focus();} },60);
+}
+
+function normalize(x){return String(x).trim().replace(/\s+/g,"");}
+
+function floatText(txt, cls, z){
+  const host=document.getElementById("battle");
+  if(!host) return;
+  const el=document.createElement("div");
+  el.className="float "+cls;
+  el.textContent=txt;
+  if(cls==="dmg"){ el.style.right=(18+Math.random()*16)+"%"; el.style.bottom=(46+Math.random()*10)+"%"; }
+  host.appendChild(el);
+  setTimeout(()=>{ el.remove(); },1000);
+}
+
+function spawnSparks(){
+  const host=document.getElementById("fx"); if(!host) return;
+  for(let i=0;i<9;i++){
+    const s=document.createElement("span");
+    s.style.cssText=`position:absolute;right:${28+Math.random()*18}%;bottom:${40+Math.random()*18}%;width:${3+Math.random()*4}px;height:${3+Math.random()*4}px;border-radius:50%;
+      background:${Math.random()>.5?"#ffd166":"#ff9d5c"};box-shadow:0 0 10px #ffb04d;opacity:0;
+      animation:sparkFly ${420+Math.random()*260}ms ease-out forwards;--sx:${(Math.random()*70-35).toFixed(1)}px;--sy:${(-30-Math.random()*46).toFixed(1)}px`;
+    host.appendChild(s);
+    setTimeout(()=>s.remove(),760);
+  }
+}
+const styleExtra=document.createElement("style");
+styleExtra.textContent="@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(.3)}}";
+document.head.appendChild(styleExtra);
+
+function submitAnswer(){
+  const input=document.getElementById("answer");
+  const btn=document.getElementById("submit");
+  const feedback=document.getElementById("feedback");
+  if(!btn || btn.disabled) return;
+  const user=normalize(input.value);
+  if(!user){ feedback.className="feedback"; feedback.textContent="✏️ 답을 먼저 입력하세요."; input.focus(); return; }
+  btn.disabled=true;
+  ac();
+  const correct=normalize(question.a);
+  const ok = user===correct;
+  const monFig=document.getElementById("monFig");
+  const heroFig=document.getElementById("heroFig");
+  const battle=document.getElementById("battle");
+  const slash=document.getElementById("slash");
+
+  if(ok){
+    correctCount++;
+    streak++;
+    if(streak>bestStreak) bestStreak=streak;
+    const gained=20+streak*5;
+    score+=100+streak*10;
+    player.xp+=gained;
+    player.gold+=10+streak;
+    player.hp=Math.min(100,player.hp+5);
+
+    /* 검격 연출 */
+    if(slash){ slash.classList.remove("go"); void slash.offsetWidth; slash.classList.add("go"); }
+    if(heroFig) { heroFig.classList.remove("lunge"); void heroFig.offsetWidth; heroFig.classList.add("lunge"); }
+    if(battle) { battle.classList.remove("shake"); void battle.offsetWidth; battle.classList.add("shake"); }
+    if(monFig) { monFig.classList.remove("hit"); void monFig.offsetWidth; monFig.classList.add("hit"); }
+    sfx.slash();
+    setTimeout(()=>{ sfx.hit(); floatText("💥", "dmg"); spawnSparks(); },110);
+    floatText("+"+gained+" XP", "gain");
+    if(streak>=2) floatText(streak+" COMBO", "crit");
+
+    /* 몬스터 처치 연출 */
+    const killed = (questionNo%3===0) || questionNo===total;
+    if(killed && monFig){
+      setTimeout(()=>{
+        monFig.classList.add("die");
+        for(let i=0;i<6;i++) setTimeout(()=>floatText("✦","crit"), i*70);
+      },260);
+    }
+
+    feedback.className="feedback ok";
+    feedback.innerHTML = `🎯 정답! <b>+${gained} XP</b> · <b>+${10+streak} 골드</b>${streak>=2?` · 🔥 ${streak}연속`:"· HP +5"}`;
+    const leveled = levelUp();
+    save();
+    setTimeout(()=>{
+      questionNo++;
+      if(questionNo>total){ clearSave(); renderResult(); }
+      else newQuestion();
+    }, leveled?1250:880);
+  }else{
+    streak=0;
+    player.hp=Math.max(0,player.hp-12);
+    if(battle){ battle.classList.remove("hurt"); void battle.offsetWidth; battle.classList.add("hurt"); }
+    if(heroFig){ heroFig.classList.remove("block"); void heroFig.offsetWidth; heroFig.classList.add("block"); }
+    sfx.wrong();
+    floatText("💢 반격 -12","miss");
+    feedback.className="feedback no";
+    feedback.innerHTML = `💥 아쉬워요! 정답은 <b>${question.a}</b> 입니다. (HP -12)`;
+    save();
+    setTimeout(()=>{
+      questionNo++;
+      if(questionNo>total){ clearSave(); renderResult(); }
+      else newQuestion();
+    },1150);
+  }
+}
+
+function renderResult(){
+  const perfect = total>0 && correctCount===total;
+  const acc = total? Math.round(correctCount/total*100):0;
+  const rank = acc>=95?"S":acc>=80?"A":acc>=60?"B":"C";
+  sfx.win();
+  stage.innerHTML=`
+    <div class="result-hero fade-in">
+      <div class="glow"></div>
+      <div class="eyebrow" style="position:relative;font-size:.66rem;letter-spacing:.3em;color:var(--gold)">ADVENTURE COMPLETE</div>
+      <h2>${perfect?"🏆 완벽한 모험!":"🎉 모험 완료!"}</h2>
+      <p>${total}문제를 모두 풀었습니다. 던전 기록을 확인하세요.</p>
+      <div style="position:relative;margin-top:14px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+        <span class="chip">랭크 ${rank}</span>
+        <span class="chip">정답률 ${acc}%</span>
+        <span class="chip">최고 콤보 ${bestStreak}</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>점수</b><span>${score}점</span></div>
+      <div class="stat"><b>레벨</b><span>Lv.${player.level}</span></div>
+      <div class="stat"><b>골드</b><span>${player.gold}G</span></div>
+      <div class="stat"><b>정답</b><span>${correctCount} / ${total}</span></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="again">⚔️ 다시 도전</button>
+      <button id="home">🏠 홈으로</button>
+    </div>`;
+  document.getElementById("again").addEventListener("click",renderSetup);
+  document.getElementById("home").addEventListener("click",renderHome);
+}
+
+function renderDetails(){
+  stage.innerHTML=`
+    <div class="bar-row"><button class="mini-btn" id="back">← 홈</button><span class="chip">GAME DETAILS</span></div>
+    <div class="panel fade-in"><div class="p-title">수학 던전에서 할 수 있는 것</div>
+      <ul class="detail-list">
+        <li>초등 수준의 덧셈, 뺄셈, 곱셈, 나눗셈, 분수 문제를 풀 수 있습니다.</li>
+        <li>종합 모드에서는 여러 종류의 문제가 섞여 나옵니다.</li>
+        <li>정답을 맞히면 XP와 골드를 얻고 연속 정답 보너스가 올라갑니다.</li>
+        <li>XP가 가득 차면 레벨업하고 HP가 회복됩니다.</li>
+        <li>10문제 또는 15문제 코스를 선택할 수 있습니다.</li>
+        <li>몬스터를 3번 맞히면 처치하고 다음 층 몬스터가 등장합니다.</li>
+      </ul>
+    </div>
+    <div class="panel"><div class="p-title">버튼 동작</div>
+      <p class="hint">정답 제출은 클릭과 Enter 키 모두 작동합니다. 저장 버튼은 현재 진행을 브라우저에 저장하고, 홈으로 이동해도 저장된 진행을 이어갈 수 있습니다. 헤더의 🔊 버튼으로 효과음을 끄고 켤 수 있습니다.</p>
+    </div>`;
+  document.getElementById("back").addEventListener("click",renderHome);
+}
+
+/* ══════════ 불씨 배경 ══════════ */
+(function initEmbers(){
+  const host=document.getElementById("embers");
+  if(!host) return;
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const n=14;
+  let html="";
+  for(let i=0;i<n;i++){
+    html+=`<i style="left:${(Math.random()*100).toFixed(1)}%;animation-duration:${(9+Math.random()*9).toFixed(1)}s;animation-delay:${(-Math.random()*14).toFixed(1)}s;--dx:${(Math.random()*60-30).toFixed(0)}px"></i>`;
+  }
+  host.innerHTML=html;
+})();
+
+render();
+})();
+</script>
+</body>
+</html>

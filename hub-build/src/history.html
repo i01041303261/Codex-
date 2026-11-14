@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>한국사 능력검정시험 퀴즈 게임</title>
+<style>
+  :root{
+    --paper:#f4ead8; --paper2:#efe2cb; --paper3:#fbf6ea;
+    --ink:#20201d; --ink2:#4a463c; --muted:#7d7463;
+    --gold:#b8892f; --gold-l:#d9b256;
+    --dan-cheong:#1f5568; --dan-green:#2c7a68; --dan-red:#b03a2c; --dan-yellow:#d8a12f;
+    --ok:#2f7d55; --no:#a8332b;
+    --line:#d8c6a5; --line-2:#c2ab84;
+    --shadow:0 18px 40px -22px rgba(70,45,20,.55);
+    --ease:cubic-bezier(.22,1,.36,1);
+    --pad-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    min-height:100vh;color:var(--ink);display:flex;justify-content:center;
+    font-family:'Nanum Myeongjo','Apple SD Gothic Neo','Malgun Gothic',Georgia,serif;
+    background:#e8dbc2; padding:14px 12px calc(20px + var(--pad-b));
+    touch-action:manipulation; overflow-x:hidden; position:relative;
+    word-break:keep-all; overflow-wrap:break-word;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(700px 420px at 12% -6%,rgba(216,161,47,.14),transparent 62%),
+      radial-gradient(600px 380px at 92% 4%,rgba(31,85,104,.12),transparent 64%),
+      radial-gradient(800px 500px at 50% 108%,rgba(176,58,44,.09),transparent 66%),
+      linear-gradient(165deg,#f6eedb,#e9dcc3 55%,#efe4cf);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;mix-blend-mode:multiply;
+    background-image:
+      repeating-linear-gradient(92deg,rgba(120,96,60,.055) 0 1px,transparent 1px 3px),
+      repeating-linear-gradient(3deg,rgba(120,96,60,.045) 0 1px,transparent 1px 5px),
+      repeating-linear-gradient(178deg,rgba(90,70,40,.03) 0 2px,transparent 2px 9px);
+  }
+  .app{width:100%;max-width:640px;position:relative;z-index:1}
+  /* ── 머리 ───────────────────────────── */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .seal{
+    width:36px;height:36px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;font-size:.62rem;
+    color:#fff3ea;background:linear-gradient(150deg,#c0392b,#8e2418);border:2px solid #f0c7b4;
+    font-weight:700;letter-spacing:.02em;line-height:1.05;text-align:center;
+    box-shadow:0 6px 14px -6px rgba(140,30,20,.7),inset 0 0 0 1px rgba(255,255,255,.25);transform:rotate(-3deg)
+  }
+  .brand b{font-size:.86rem;letter-spacing:.14em;color:#4a4034;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tools{display:flex;gap:6px;flex:0 0 auto}
+  .icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-size:1rem;
+    border:1px solid var(--line-2);background:rgba(255,252,244,.7);color:var(--ink2);transition:.18s;touch-action:manipulation}
+  .icon:hover{background:#fffdf6;border-color:var(--gold)}
+  .icon[data-off="1"]{opacity:.55}
+  /* ── 표지 ───────────────────────────── */
+  .cover{position:relative;border:1px solid var(--line-2);border-radius:6px;overflow:hidden;
+    background:linear-gradient(160deg,#fbf6ea,#f0e4cd);box-shadow:var(--shadow);margin-bottom:12px}
+  .cover .art{display:block;width:100%;height:auto}
+  .cover .label{position:relative;padding:13px 18px 16px;border-top:1px solid rgba(190,168,132,.45);
+    background:linear-gradient(180deg,#fbf6ea,#f7efdd)}
+  .cover .eyebrow{font-size:.6rem;letter-spacing:.34em;color:var(--dan-red);font-weight:700}
+  .cover h1{font-size:clamp(1.5rem,6.4vw,2.2rem);line-height:1.22;margin:5px 0 4px;letter-spacing:-.01em;color:#241f18}
+  .cover p{font-size:.82rem;line-height:1.6;color:var(--ink2)}
+  .cover .stripe{position:absolute;top:0;left:0;right:0;height:5px;
+    background:repeating-linear-gradient(90deg,var(--dan-cheong) 0 18px,var(--dan-green) 18px 36px,var(--dan-yellow) 36px 54px,var(--dan-red) 54px 72px)}
+  /* ── 패널 ───────────────────────────── */
+  .panel{position:relative;background:linear-gradient(160deg,#fdf9ef,#f4e9d5);border:1px solid var(--line);
+    border-radius:6px;padding:16px 16px 15px;margin-bottom:11px;box-shadow:var(--shadow)}
+  .panel::before,.panel::after{content:"";position:absolute;width:13px;height:13px;border:2px solid var(--gold);opacity:.6}
+  .panel::before{top:6px;left:6px;border-right:0;border-bottom:0}
+  .panel::after{bottom:6px;right:6px;border-left:0;border-top:0}
+  .p-title{font-size:.68rem;letter-spacing:.22em;color:var(--dan-cheong);font-weight:700;margin-bottom:9px;text-transform:uppercase}
+  .record{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:13px 0;margin:2px 0 0;text-align:center}
+  .record .n{font-size:1.24rem;font-weight:700;color:var(--dan-red);letter-spacing:-.01em}
+  .record .m{font-size:.82rem;color:var(--ink2);line-height:1.6;margin-top:5px}
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+  .feat{text-align:center;border:1px solid var(--line);border-radius:4px;padding:9px 6px;background:rgba(255,255,255,.5)}
+  .feat b{display:block;font-size:.72rem;color:var(--dan-cheong);margin-bottom:2px}
+  .feat span{font-size:.64rem;color:var(--muted)}
+  /* ── 버튼 ───────────────────────────── */
+  button{font-family:inherit;cursor:pointer;touch-action:manipulation;border-radius:5px;transition:.16s var(--ease)}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn{display:block;width:100%;padding:14px 18px;font-size:1rem;font-weight:700;border:1px solid var(--ink);
+    background:linear-gradient(160deg,#33312a,#1f1e1a);color:#f7efdd;letter-spacing:.02em;
+    box-shadow:0 12px 24px -16px rgba(30,25,15,.9),inset 0 1px 0 rgba(255,255,255,.12)}
+  .btn:hover{background:linear-gradient(160deg,#43403a,#2a2823)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(160deg,#2c6f63,#1d4f47);border-color:#17423b;
+    box-shadow:0 14px 26px -16px rgba(20,70,60,.9),inset 0 1px 0 rgba(255,255,255,.16)}
+  .btn.primary:hover{background:linear-gradient(160deg,#33816f,#225c53)}
+  .btn.gold{background:linear-gradient(160deg,#d8a94a,#b0842a);border-color:#8f6a1d;color:#241a06;
+    box-shadow:0 14px 26px -16px rgba(150,110,20,.9),inset 0 1px 0 rgba(255,255,255,.4)}
+  .btn.gold:hover{filter:brightness(1.05)}
+  .btn.ghost{background:rgba(255,255,255,.55);color:var(--ink);border-color:var(--line-2);box-shadow:none}
+  .btn.ghost:hover{background:#fffdf6;border-color:var(--gold)}
+  .btn + .btn{margin-top:9px}
+  .btn:disabled{opacity:.45;cursor:default}
+  /* ── 화면 ───────────────────────────── */
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .3s var(--ease) both}
+  @keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .crumb{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+  .back{width:auto;padding:8px 12px;font-size:.82rem;border:1px solid var(--line-2);background:rgba(255,255,255,.55);color:var(--ink2);border-radius:4px}
+  .back:hover{background:#fffdf6;border-color:var(--gold)}
+  .tagline-cur{font-size:.68rem;letter-spacing:.16em;color:var(--gold);font-weight:700}
+  h2.sec{font-size:1.1rem;margin-bottom:3px;color:#241f18}
+  .sub{font-size:.78rem;color:var(--muted);margin-bottom:12px}
+  /* 카테고리 */
+  .cat{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 14px;margin-bottom:8px;
+    border:1px solid var(--line-2);border-radius:5px;background:linear-gradient(150deg,#fffdf6,#f6ecd9);color:var(--ink)}
+  .cat:hover{border-color:var(--gold);box-shadow:0 10px 22px -16px rgba(120,90,30,.8);transform:translateY(-1px)}
+  .cat .ic{width:42px;height:42px;flex:0 0 auto;display:grid;place-items:center;font-size:1.3rem;border-radius:4px;
+    background:linear-gradient(150deg,rgba(31,85,104,.14),rgba(44,122,104,.1));border:1px solid rgba(31,85,104,.25)}
+  .cat .tx b{display:block;font-size:.96rem;letter-spacing:.02em}
+  .cat .tx span{font-size:.72rem;color:var(--muted)}
+  .cat .go{margin-left:auto;color:var(--gold);font-size:1.1rem}
+  /* 난이도 */
+  .diff{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:13px 14px;margin-bottom:8px;
+    border:1px solid var(--line-2);border-radius:5px;background:linear-gradient(150deg,#fffdf6,#f6ecd9);color:var(--ink)}
+  .diff:hover{border-color:var(--gold);transform:translateY(-1px)}
+  .diff .lvl{width:30px;height:30px;flex:0 0 auto;display:grid;place-items:center;border-radius:50%;font-size:.82rem;font-weight:700;
+    color:#fff8ec;background:linear-gradient(150deg,var(--dan-cheong),#16404f)}
+  .diff[data-l="2"] .lvl{background:linear-gradient(150deg,var(--dan-green),#1c5c4e)}
+  .diff[data-l="3"] .lvl{background:linear-gradient(150deg,var(--dan-yellow),#a9781c);color:#2b1e05}
+  .diff[data-l="4"] .lvl{background:linear-gradient(150deg,var(--dan-red),#7c241a)}
+  .diff .tx b{display:block;font-size:.9rem}
+  .diff .tx span{font-size:.72rem;color:var(--muted)}
+  /* 퀴즈 */
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-size:.74rem;color:var(--ink2)}
+  .quiz-head .streak{color:var(--dan-red);font-weight:700}
+  .qcard-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .qcard-top .streak{font-size:.68rem;font-weight:700;color:var(--dan-red);background:rgba(176,58,44,.08);
+    border:1px solid rgba(176,58,44,.22);padding:3px 9px;border-radius:99px}
+  .qcard-top .kbdhint{font-size:.64rem;color:#a99c85;letter-spacing:.04em}
+  .bar{height:7px;border-radius:99px;background:rgba(120,95,55,.16);overflow:hidden;margin-bottom:12px;
+    border:1px solid rgba(120,95,55,.14)}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2c6f63,#69b79c);transition:width .45s var(--ease)}
+  .qcard{position:relative;background:linear-gradient(160deg,#fffdf6,#f7eddb);border:1px solid var(--line-2);
+    border-radius:6px;padding:18px 16px 16px;box-shadow:var(--shadow);margin-bottom:11px;overflow:hidden}
+  .qcard .qtag{font-size:.66rem;letter-spacing:.16em;color:var(--dan-cheong);font-weight:700;margin-bottom:8px}
+  .qcard .qnum{display:inline-grid;place-items:center;width:24px;height:24px;margin-right:6px;border-radius:50%;
+    background:var(--dan-cheong);color:#fff;font-size:.72rem;vertical-align:1px}
+  .qcard .qtext{font-size:1.02rem;line-height:1.72;font-weight:700;color:#241f18;word-break:keep-all}
+  .opts{display:grid;gap:8px}
+  .opt{position:relative;display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;padding:13px 13px;
+    border:1px solid #d5c3a2;border-radius:5px;background:#fffdf7;color:#2b2822;font-size:.92rem;line-height:1.55}
+  .opt .no{flex:0 0 auto;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:.72rem;font-weight:700;
+    border:1px solid #c9b48d;color:#6b5c44;background:#f7efdd}
+  .opt:hover:not(:disabled){border-color:var(--gold);background:#fffef9;transform:translateY(-1px)}
+  .opt:disabled{cursor:default}
+  .opt.pick{border-color:var(--dan-cheong);box-shadow:0 0 0 2px rgba(31,85,104,.12)}
+  .opt.correct{border-color:#2f7d55;background:#f0f9f2;box-shadow:0 0 0 2px rgba(47,125,85,.16)}
+  .opt.correct .no{background:#2f7d55;border-color:#2f7d55;color:#fff}
+  .opt.wrong{border-color:#b03a2c;background:#fdf1ef}
+  .opt.wrong .no{background:#b03a2c;border-color:#b03a2c;color:#fff}
+  .opt.dim{opacity:.55}
+  .opt .mark{margin-left:auto;font-weight:700;font-size:1rem}
+  .feedback{border-radius:5px;padding:0;max-height:0;overflow:hidden;transition:max-height .35s var(--ease),padding .3s,opacity .3s;opacity:0}
+  .feedback.on{max-height:340px;padding:13px 14px;opacity:1;margin-top:10px}
+  .feedback.ok{background:rgba(47,125,85,.1);border:1px solid rgba(47,125,85,.35)}
+  .feedback.no{background:rgba(176,58,44,.09);border:1px solid rgba(176,58,44,.3)}
+  .feedback .head{display:flex;align-items:center;gap:7px;font-weight:700;font-size:.9rem;margin-bottom:5px}
+  .feedback.ok .head{color:#2f7d55}
+  .feedback.no .head{color:#b03a2c}
+  .feedback .exp{font-size:.84rem;line-height:1.68;color:#3d382e;word-break:keep-all}
+  .feedback .exp b{color:var(--dan-cheong)}
+  .nextline{margin-top:10px}
+  .feedback .mk{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;margin-right:6px;
+    font-weight:700;font-size:1.02rem;vertical-align:-6px;line-height:1}
+  .feedback .mk.ok{color:#2f7d55;border:2px solid rgba(47,125,85,.6);animation:mkPop .5s var(--ease) both}
+  .feedback .mk.no{color:#b03a2c;border:2px solid rgba(176,58,44,.6);animation:mkPop .45s var(--ease) both,mkShake .5s ease .12s}
+  @keyframes mkPop{0%{transform:scale(1.9);opacity:0}60%{transform:scale(.92);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes mkShake{0%,100%{transform:translateX(0)}30%{transform:translateX(-4px)}60%{transform:translateX(4px)}}
+  /* 결과 */
+  .result{border:1px solid var(--line-2);border-radius:6px;background:linear-gradient(160deg,#fffdf6,#f4e8d2);
+    box-shadow:var(--shadow);padding:22px 18px;text-align:center;position:relative;overflow:hidden;margin-bottom:11px}
+  .result .rank{font-size:.64rem;letter-spacing:.3em;color:var(--gold);font-weight:700}
+  .result h2.title{font-size:1.4rem;margin:6px 0 2px;color:#241f18}
+  .result .scoreline{display:flex;align-items:baseline;justify-content:center;gap:7px;margin:10px 0 2px}
+  .result .scoreline b{font-size:2.5rem;line-height:1;color:var(--dan-red);letter-spacing:-.02em}
+  .result .scoreline span{font-size:.9rem;color:var(--muted)}
+  .result .msg{font-size:.88rem;line-height:1.65;color:var(--ink2);margin:10px auto 0;max-width:420px}
+  .result .sealbig{position:absolute;top:14px;right:14px;width:58px;height:58px;border-radius:8px;display:grid;place-items:center;
+    border:2.5px solid rgba(176,58,44,.55);color:rgba(176,58,44,.8);font-size:.7rem;font-weight:700;line-height:1.15;text-align:center;
+    transform:rotate(9deg);letter-spacing:.02em}
+  .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0 4px}
+  .mini-stats div{border:1px solid var(--line);border-radius:4px;padding:9px 6px;background:rgba(255,255,255,.55)}
+  .mini-stats b{display:block;font-size:.62rem;letter-spacing:.1em;color:var(--muted);margin-bottom:3px}
+  .mini-stats span{font-size:.96rem;font-weight:700;color:#2c2820}
+  .reviewlist{text-align:left;margin-top:10px}
+  .reviewlist .rv{border-left:3px solid var(--dan-red);padding:8px 0 8px 10px;margin-bottom:8px;background:rgba(176,58,44,.05);border-radius:0 4px 4px 0}
+  .reviewlist .rv q{font-size:.82rem;line-height:1.6;color:#3d382e;display:block;quotes:"“" "”"}
+  .reviewlist .rv small{display:block;font-size:.74rem;color:#2f7d55;margin-top:4px;line-height:1.55}
+  .note{font-size:.74rem;color:var(--muted);line-height:1.6;text-align:center}
+  #toast{position:fixed;left:50%;bottom:calc(18px + var(--pad-b));translate:-50% 0;z-index:60;
+    background:rgba(36,31,24,.94);color:#f7efdd;padding:9px 16px;border-radius:99px;font-size:.8rem;
+    opacity:0;pointer-events:none;transition:.28s;transform:translate(-50%,8px)}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(max-width:430px){
+    body{padding:12px 10px calc(18px + var(--pad-b))}
+    .qcard{padding:15px 13px}
+    .opt{padding:12px;font-size:.88rem}
+    .feedback .mk{width:23px;height:23px;font-size:.94rem}
+    .result .scoreline b{font-size:2.1rem}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand"><span class="seal">한능<br>검</span><b>한국사 능력검정 퀴즈</b></div>
+    <div class="tools">
+      <button class="icon" id="muteBtn" title="효과음" aria-label="효과음 켜기/끄기">🔊</button>
+    </div>
+  </div>
+
+  <!-- 1. 홈 -->
+  <div id="home-screen" class="screen active">
+    <div class="cover">
+      <svg class="art" viewBox="0 0 640 226" role="img" aria-label="한옥 처마와 산">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fdf7e8"/><stop offset="1" stop-color="#f1e3c8"/></linearGradient>
+          <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43433a"/><stop offset="1" stop-color="#242420"/></linearGradient>
+          <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f3e6cc"/></linearGradient>
+        </defs>
+        <rect width="640" height="226" fill="url(#sky)"/>
+        <circle cx="548" cy="46" r="23" fill="#e6b45e" opacity=".3"/>
+        <path d="M0 138 L72 106 L144 132 L216 100 L288 130 L360 104 L432 132 L504 108 L576 134 L640 116 L640 226 L0 226Z" fill="#a9b7ae" opacity=".38"/>
+        <path d="M0 158 L84 138 L156 156 L236 132 L308 158 L388 138 L458 160 L536 142 L604 162 L640 152 L640 226 L0 226Z" fill="#7f9188" opacity=".26"/>
+        <g opacity=".45" stroke="#8a7f6a" stroke-width="1.1" fill="none">
+          <path d="M42 186 q20 -7 40 0 q20 7 40 0"/>
+          <path d="M476 192 q20 -7 40 0 q20 7 40 0"/>
+        </g>
+        <rect x="104" y="192" width="432" height="18" rx="2" fill="#d8caae" stroke="#b8a686"/>
+        <rect x="120" y="210" width="400" height="9" fill="#bdac8d"/>
+        <g fill="#8f3a30">
+          <rect x="136" y="130" width="14" height="62"/><rect x="250" y="130" width="14" height="62"/>
+          <rect x="364" y="130" width="14" height="62"/><rect x="478" y="130" width="14" height="62"/>
+        </g>
+        <rect x="150" y="134" width="100" height="58" fill="url(#wall)" stroke="#cfbb97"/>
+        <rect x="264" y="134" width="100" height="58" fill="url(#wall)" stroke="#cfbb97"/>
+        <rect x="378" y="134" width="100" height="58" fill="url(#wall)" stroke="#cfbb97"/>
+        <g stroke="#c9a97c" stroke-width="1.2" opacity=".8">
+          <path d="M150 162 H250 M200 134 V192"/>
+          <path d="M264 162 H364 M314 134 V192"/>
+          <path d="M378 162 H478 M428 134 V192"/>
+        </g>
+        <g fill="#8f3a30" opacity=".55">
+          <rect x="150" y="134" width="100" height="5"/><rect x="264" y="134" width="100" height="5"/><rect x="378" y="134" width="100" height="5"/>
+        </g>
+        <rect x="120" y="116" width="400" height="14" fill="#1f5568"/>
+        <g fill="#d8a12f">
+          <rect x="128" y="119" width="11" height="8"/><rect x="151" y="119" width="11" height="8"/>
+          <rect x="174" y="119" width="11" height="8"/><rect x="197" y="119" width="11" height="8"/>
+          <rect x="220" y="119" width="11" height="8"/><rect x="243" y="119" width="11" height="8"/>
+          <rect x="266" y="119" width="11" height="8"/><rect x="289" y="119" width="11" height="8"/>
+          <rect x="312" y="119" width="11" height="8"/><rect x="335" y="119" width="11" height="8"/>
+          <rect x="358" y="119" width="11" height="8"/><rect x="381" y="119" width="11" height="8"/>
+          <rect x="404" y="119" width="11" height="8"/><rect x="427" y="119" width="11" height="8"/>
+          <rect x="450" y="119" width="11" height="8"/><rect x="473" y="119" width="11" height="8"/>
+          <rect x="496" y="119" width="11" height="8"/>
+        </g>
+        <path d="M64 116 Q158 76 320 72 Q482 76 576 116 Q508 98 462 94 L178 94 Q132 98 64 116Z" fill="url(#roof)"/>
+        <path d="M64 116 Q46 108 24 118 Q50 124 76 126 Q68 120 64 116Z" fill="#242420"/>
+        <path d="M576 116 Q594 108 616 118 Q590 124 564 126 Q572 120 576 116Z" fill="#242420"/>
+        <path d="M96 116 Q196 92 320 90 Q444 92 544 116 Q440 106 320 106 Q200 106 96 116Z" fill="#4d4d43"/>
+        <path d="M186 94 L454 94" stroke="#5b5b4e" stroke-width="2.2" opacity=".75"/>
+        <g fill="#f8d78a" opacity=".5">
+          <rect x="170" y="150" width="24" height="18" rx="1"/><rect x="292" y="150" width="24" height="18" rx="1"/><rect x="406" y="150" width="24" height="18" rx="1"/>
+        </g>
+        <g stroke="#a99c85" stroke-width="1.4" opacity=".5">
+          <path d="M596 200 V176"/><path d="M590 178 H602"/>
+        </g>
+      </svg>
+      <div class="stripe"></div>
+      <div class="label">
+        <div class="eyebrow">KOREAN HISTORY QUIZ</div>
+        <h1>한국사 능력검정 퀴즈</h1>
+        <p>주제와 난이도를 골라 문제를 풀고, 해설로 한 걸음 더 깊이 배웁니다.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="p-title">지난 기록</div>
+      <div class="record">
+        <div id="home-score-display" class="n">최근 맞춘 문제: - / -</div>
+        <div id="home-message-display" class="m">문제를 풀면 이곳에 기록과 응원 문구가 나타납니다! 화이팅! 💪</div>
+      </div>
+      <div class="feats">
+        <div class="feat"><b>3개 주제</b><span>선사·발해·정치</span></div>
+        <div class="feat"><b>1~4단계</b><span>난이도 조절</span></div>
+        <div class="feat"><b>해설</b><span>정답 풀이</span></div>
+      </div>
+    </div>
+    <button class="btn primary" onclick="goToCategory()">플레이 시작하기 🚀</button>
+    <button class="btn ghost" onclick="downloadGameSource()">이 게임 파일 컴퓨터에 다운로드 💾</button>
+  </div>
+
+  <!-- 2. 주제 -->
+  <div id="category-screen" class="screen">
+    <div class="crumb">
+      <button class="back" onclick="goToHome()">← 홈으로</button>
+      <span class="tagline-cur">STEP 1 · 주제</span>
+    </div>
+    <div class="panel">
+      <h2 class="sec">📚 주제를 선택하세요</h2>
+      <p class="sub">주제별로 문제가 나누어져 있어요</p>
+      <button class="cat" onclick="selectCategory('prehistoric')">
+        <span class="ic">🪨</span>
+        <span class="tx"><b>선사시대</b><span>구석기 · 신석기 · 청동기 · 철기</span></span>
+        <span class="go">›</span>
+      </button>
+      <button class="cat" onclick="selectCategory('balhae')">
+        <span class="ic">🏯</span>
+        <span class="tx"><b>발해</b><span>건국 · 전성기 · 통치 체제 · 멸망</span></span>
+        <span class="go">›</span>
+      </button>
+      <button class="cat" onclick="selectCategory('political')">
+        <span class="ic">👑</span>
+        <span class="tx"><b>정치사</b><span>삼국의 정치 · 통일신라 · 왕권</span></span>
+        <span class="go">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. 난이도 -->
+  <div id="difficulty-screen" class="screen">
+    <div class="crumb">
+      <button class="back" onclick="goToCategory()">← 주제 다시 선택</button>
+      <span id="difficulty-category-tag" class="tagline-cur">선사시대</span>
+    </div>
+    <div class="panel">
+      <h2 class="sec">🎯 난이도를 선택하세요</h2>
+      <p class="sub">난이도가 높을수록 더 까다로운 문제가 나와요 (4문제)</p>
+      <button class="diff" data-l="1" onclick="selectDifficulty(1)">
+        <span class="lvl">1</span><span class="tx"><b>1단계 · 쉬움</b><span>기본 개념을 확인하는 문제</span></span>
+      </button>
+      <button class="diff" data-l="2" onclick="selectDifficulty(2)">
+        <span class="lvl">2</span><span class="tx"><b>2단계 · 보통</b><span>주요 사건과 인물 문제</span></span>
+      </button>
+      <button class="diff" data-l="3" onclick="selectDifficulty(3)">
+        <span class="lvl">3</span><span class="tx"><b>3단계 · 어려움</b><span>세부 내용을 묻는 문제</span></span>
+      </button>
+      <button class="diff" data-l="4" onclick="selectDifficulty(4)">
+        <span class="lvl">4</span><span class="tx"><b>4단계 · 최상급</b><span>심화·변별력 있는 문제</span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. 퀴즈 -->
+  <div id="quiz-screen" class="screen">
+    <div class="crumb">
+      <button class="back" onclick="goToHome()">← 그만두기</button>
+      <span id="quiz-tag" class="tagline-cur">선사시대 · 1단계</span>
+    </div>
+    <div class="quiz-head">
+      <span id="question-number">문제 1 / 4</span>
+      <span id="score-counter">맞춘 개수: 0</span>
+    </div>
+    <div class="bar"><i id="progress-fill"></i></div>
+    <div class="qcard" id="qcard">
+      <div class="qcard-top"><span id="streak-badge" class="streak">연속 정답 0</span><span class="kbdhint">키보드 1~4</span></div>
+      <div id="question-text" class="qtext">문제 내용이 여기에 표시됩니다.</div>
+      <div class="opts" id="opts" style="margin-top:14px">
+        <button class="opt" onclick="submitAnswer(1)" id="opt1"><span class="no">1</span><span class="tx">1번 보기</span><span class="mark"></span></button>
+        <button class="opt" onclick="submitAnswer(2)" id="opt2"><span class="no">2</span><span class="tx">2번 보기</span><span class="mark"></span></button>
+        <button class="opt" onclick="submitAnswer(3)" id="opt3"><span class="no">3</span><span class="tx">3번 보기</span><span class="mark"></span></button>
+        <button class="opt" onclick="submitAnswer(4)" id="opt4"><span class="no">4</span><span class="tx">4번 보기</span><span class="mark"></span></button>
+      </div>
+      <div class="feedback" id="feedback">
+        <div class="head" id="fbHead"></div>
+        <div class="exp" id="fbExp"></div>
+        <div class="nextline"><button class="btn gold" id="nextBtn">다음 문제 →</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 결과 -->
+  <div id="result-screen" class="screen">
+    <div class="result">
+      <div class="sealbig" id="result-seal">수고<br>하였<br>습니다</div>
+      <div class="rank">RESULT REPORT</div>
+      <h2 class="title">🎉 퀴즈 종료!</h2>
+      <div class="scoreline"><b id="result-score">0</b><span>/ <span id="result-total">4</span> 문제</span></div>
+      <div class="mini-stats">
+        <div><b>정답률</b><span id="result-acc">0%</span></div>
+        <div><b>최고 연속</b><span id="result-streak">0</span></div>
+        <div><b>등급</b><span id="result-grade">-</span></div>
+      </div>
+      <div id="result-message" class="msg">대단합니다!</div>
+      <div class="reviewlist" id="result-review"></div>
+    </div>
+    <button class="btn" onclick="goToDifficulty()">같은 주제, 다른 난이도 🔁</button>
+    <button class="btn ghost" onclick="goToHome()">🏠 홈으로 이동하기</button>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ── 주제 표시 이름 ─────────────────────────────── */
+const categoryNames = { prehistoric:"선사시대", balhae:"발해", political:"정치사" };
+
+/* ── 카테고리 x 난이도별 문제 데이터 (기존 문제 100% 유지 + 해설) ── */
+const quizData = {
+  prehistoric: {
+    1: [
+      { q:"주먹도끼, 찍개 등의 뗀석기를 사용했던 시대는 언제일까요?", o:["구석기 시대","신석기 시대","청동기 시대","철기 시대"], a:1,
+        e:"뗀석기는 구석기 시대의 대표 도구입니다. 주먹도끼·찍개·긁개처럼 돌을 깨뜨려 만든 석기를 사용했습니다." },
+      { q:"간석기와 빗살무늬 토기를 사용하며 농경과 정착 생활이 시작된 시대는?", o:["구석기 시대","신석기 시대","청동기 시대","철기 시대"], a:2,
+        e:"간석기와 빗살무늬 토기는 신석기 시대의 대표 유물이며, 이때 농경과 정착 생활이 시작되었습니다." },
+      { q:"계급이 발생하고 고인돌이 만들어지기 시작한 시대는?", o:["구석기 시대","신석기 시대","청동기 시대","철기 시대"], a:3,
+        e:"청동기 시대에는 잉여 생산물이 생기며 계급이 나뉘었고, 지배자의 무덤인 고인돌이 만들어졌습니다." },
+      { q:"철제 농기구를 사용하여 생산력이 크게 늘어난 시대는?", o:["구석기 시대","신석기 시대","청동기 시대","철기 시대"], a:4,
+        e:"철제 농기구가 보급된 철기 시대에 생산력이 크게 늘고 인구가 증가했습니다." }
+    ],
+    2: [
+      { q:"주먹도끼가 출토되어 유럽 중심의 구석기 학설을 뒤집은 대표적 유적지는?", o:["연천 전곡리","공주 석장리","단양 수양개","제천 점말동굴"], a:1,
+        e:"연천 전곡리에서 아슐리안형 주먹도끼가 발견되어, 동아시아에도 구석기 문화가 있었음이 밝혀졌습니다." },
+      { q:"신석기 시대의 대표적인 토기는 무엇일까요?", o:["미송리식 토기","빗살무늬 토기","민무늬 토기","덧띠토기"], a:2,
+        e:"빗살무늬 토기는 신석기 시대를 대표하는 토기로, 표면에 빗살 같은 무늬를 새겼습니다." },
+      { q:"만주와 한반도에서 출토되는 청동기 시대의 대표적인 청동검은?", o:["세형동검","비파형동검","환두대도","반달돌칼"], a:2,
+        e:"비파형 동검은 만주와 한반도 청동기 시대를 대표하는 청동검으로, 고조선의 문화 범위를 보여 줍니다." },
+      { q:"철기 시대에 중국과의 교역에 사용된 화폐로 알려진 것은?", o:["상평통보","명도전","건원중보","해동통보"], a:2,
+        e:"명도전은 중국 연나라의 화폐로, 철기 시대에 중국과 교역이 이루어졌음을 보여 주는 유물입니다." }
+    ],
+    3: [
+      { q:"청동기 시대의 대표적인 농기구로 곡식을 수확할 때 사용한 것은?", o:["반달돌칼","돌괭이","뼈낚시바늘","슴베찌르개"], a:1,
+        e:"반달돌칼은 청동기 시대에 곡식의 이삭을 따는 데 사용한 대표적인 농기구입니다." },
+      { q:"신석기 시대에 실을 뽑는 데 사용된 도구는 무엇일까요?", o:["가락바퀴","갈돌과 갈판","빗살무늬토기","조개껍데기 가면"], a:1,
+        e:"가락바퀴는 신석기 시대에 실을 뽑을 때 사용한 도구로, 직조 기술이 있었음을 알려 줍니다." },
+      { q:"고조선의 문화 범위를 짐작하게 하는 유물의 조합으로 옳은 것은?", o:["비파형동검·고인돌·미송리식토기","세형동검·독무덤·명도전","주먹도끼·찍개·긁개","빗살무늬토기·가락바퀴·조개껍데기가면"], a:1,
+        e:"비파형 동검, 고인돌, 미송리식 토기는 고조선의 문화 범위를 짐작하게 하는 대표 유물 조합입니다." },
+      { q:"철기 시대에 널무덤과 함께 유행한 무덤 양식은?", o:["돌무지덧널무덤","독무덤","굴식돌방무덤","돌무지무덤"], a:2,
+        e:"초기 철기 시대에는 널무덤(목관묘)과 독무덤(옹관묘)이 널리 유행했습니다." }
+    ],
+    4: [
+      { q:"구석기 시대 사람들이 계절에 따라 이동 생활을 했던 주된 이유로 옳은 것은?", o:["사냥감과 식물 자원을 따라 이동","농사지을 땅을 찾기 위해","무역을 위해","종교적 순례를 위해"], a:1,
+        e:"구석기인은 먹을거리를 구하기 위해 사냥감과 식물 자원을 따라 계절에 따라 이동 생활을 했습니다." },
+      { q:"신석기 시대 정착 생활의 증거가 되는 대표적인 주거 형태는?", o:["동굴","막집","움집","기와집"], a:3,
+        e:"움집은 신석기 시대에 사람들이 한곳에 정착해 살았음을 보여 주는 대표적인 주거 형태입니다." },
+      { q:"청동기 시대 군장(족장)의 무덤으로 추정되며 북방식으로도 불리는 고인돌 형태는?", o:["탁자식","바둑판식","개석식","돌무지식"], a:1,
+        e:"탁자식 고인돌은 북방식 고인돌로도 불리며, 군장의 무덤으로 추정됩니다." },
+      { q:"초기 철기 시대에 청동기를 국내에서 자체 제작했음을 보여주는 대표 유물은?", o:["거푸집(용범)","세형동검","잔무늬거울","명도전"], a:1,
+        e:"거푸집(용범)은 청동기를 국내에서 직접 만들어 냈음을 보여 주는 대표적인 유물입니다." }
+    ]
+  },
+  balhae: {
+    1: [
+      { q:"발해를 건국한 인물은 누구일까요?", o:["대조영","무왕","문왕","선왕"], a:1,
+        e:"대조영은 고구려 유민과 말갈인을 이끌고 동모산 기슭에서 발해를 건국했습니다." },
+      { q:"발해를 세운 중심 세력은 고구려 유민과 어느 민족이었을까요?", o:["말갈족","거란족","여진족","돌궐족"], a:1,
+        e:"발해는 고구려 유민과 말갈족이 함께 세운 나라입니다." },
+      { q:"발해가 9세기 선왕 때 전성기를 맞으며 중국으로부터 불린 별칭은?", o:["해동성국","동방예의지국","군자의 나라","금수강산"], a:1,
+        e:"선왕 때 최대 영토를 확보한 발해는 중국에서 '해동성국'이라 불릴 만큼 번성했습니다." },
+      { q:"발해가 처음 건국된 지역은 어디 근처였을까요?", o:["동모산","한성","평양성","금성"], a:1,
+        e:"대조영은 동모산 기슭에서 발해를 세웠습니다." }
+    ],
+    2: [
+      { q:"발해가 고구려를 계승했다고 볼 수 있는 근거가 되는 문화유산은?", o:["온돌과 치미","석굴암","분청사기","첨성대"], a:1,
+        e:"온돌 시설과 치미(지붕 장식 기와)는 발해가 고구려의 문화를 계승했음을 보여 줍니다." },
+      { q:"발해의 중앙 통치 기구는 어느 나라의 제도를 참고하여 만들어졌을까요?", o:["당나라","일본","돌궐","신라"], a:1,
+        e:"발해의 3성 6부는 당의 제도를 받아들여 정비한 중앙 통치 기구입니다." },
+      { q:"발해의 도읍 중 온돌 시설과 치미 등이 발견되었으며 가장 오래 수도 역할을 한 곳은?", o:["상경성","중경성","동경성","서경성"], a:1,
+        e:"상경성(용천부)은 발해의 대표적인 수도 유적으로, 온돌 시설과 치미 등이 확인되었습니다." },
+      { q:"발해가 활발히 교류하며 사신을 파견했던 바다 건너의 나라는?", o:["일본","베트남","티베트","인도"], a:1,
+        e:"발해는 일본과 사신을 주고받으며 문화와 물자를 활발히 교류했습니다." }
+    ],
+    3: [
+      { q:"발해 무왕 때 당의 산둥반도(등주)를 공격하게 한 인물은?", o:["장문휴","대조영","대야발","이정기"], a:1,
+        e:"무왕 때 장문휴가 수군을 이끌고 당의 등주(산둥반도)를 공격했습니다." },
+      { q:"발해 문왕이 사용한 독자적인 연호로 알려진 것은?", o:["대흥","인안","건흥","정력"], a:1,
+        e:"문왕은 '대흥'이라는 독자적인 연호를 사용하며 자주의식을 드러냈습니다." },
+      { q:"발해 선왕 때 정비된 지방 행정 조직은 '5경 15부' 다음에 몇 주로 구성되었을까요?", o:["62주","9주","22담로","520현"], a:1,
+        e:"선왕은 지방을 5경 15부 62주로 정비해 통치 체제를 완성했습니다." },
+      { q:"발해가 고구려 계승 의식을 드러내며 일본에 보낸 국서에서 스스로를 칭한 표현은?", o:["고려(고려국왕)","부여","진국","대진"], a:1,
+        e:"발해는 일본에 보낸 국서에서 고구려 계승 의식에 따라 스스로 '고려(고려국왕)'라 칭했습니다." }
+    ],
+    4: [
+      { q:"발해의 중앙 관제인 3성 6부 중 정책을 심의하던 기구는?", o:["선조성","정당성","중대성","문하성"], a:1,
+        e:"발해의 3성 중 선조성은 정책을 심의하는 기구였습니다." },
+      { q:"발해 멸망 연도와 발해를 멸망시킨 나라를 옳게 짝지은 것은?", o:["926년 - 거란(요)","918년 - 고려","935년 - 후백제","668년 - 당"], a:1,
+        e:"발해는 926년 거란(요)의 침공으로 멸망했습니다." },
+      { q:"발해 멸망 이후 유민들이 세운 부흥 운동 국가로 알려진 것은?", o:["정안국","후백제","마진","태봉"], a:1,
+        e:"발해 유민들은 정안국을 세워 부흥 운동을 펼쳤습니다." },
+      { q:"정혜공주묘와 정효공주묘를 통해 알 수 있는 발해 무덤 양식의 특징으로 옳은 것은?", o:["고구려·당 양식이 함께 나타난다","신라 양식만 나타난다","백제 양식만 나타난다","왜(일본) 양식만 나타난다"], a:1,
+        e:"정혜공주묘는 고구려식 굴식 돌방무덤, 정효공주묘는 당식 벽돌무덤으로 두 양식이 함께 나타납니다." }
+    ]
+  },
+  political: {
+    1: [
+      { q:"신라 진흥왕 때 국가적 조직으로 개편된 청소년 수양 단체는?", o:["화랑도","독서삼품과","국학","성균관"], a:1,
+        e:"진흥왕은 화랑도를 국가적인 조직으로 개편해 인재를 양성하고 왕권을 강화했습니다." },
+      { q:"백제의 전성기를 이끌며 요서 지방까지 진출했던 왕은?", o:["근초고왕","무령왕","성왕","고이왕"], a:1,
+        e:"근초고왕 때 백제는 전성기를 누리며 고구려를 공격하고 요서 지방까지 진출했습니다." },
+      { q:"신라의 왕호를 마립간에서 '왕'으로 바꾼 왕은?", o:["지증왕","법흥왕","진흥왕","내물왕"], a:1,
+        e:"지증왕은 '마립간' 대신 '왕'이라는 칭호를 사용하며 왕권을 강화했습니다." },
+      { q:"적극적인 남진 정책을 펼쳐 백제의 수도 한성을 함락한 고구려의 왕은?", o:["장수왕","광개토대왕","소수림왕","고국천왕"], a:1,
+        e:"장수왕은 평양으로 도읍을 옮기고 남진 정책을 펼쳐 백제의 한성을 함락했습니다." }
+    ],
+    2: [
+      { q:"신라의 신분에 따라 관직 승진 등에 제한을 둔 고유의 신분제도는?", o:["골품제","과전법","음서제","상수리제도"], a:1,
+        e:"골품제는 신라의 신분에 따라 관직 승진과 생활을 제한한 고유의 신분 제도입니다." },
+      { q:"고구려 장수왕의 남진으로 한성이 함락된 후 백제가 도읍을 옮긴 곳은?", o:["웅진","사비","평양","금성"], a:1,
+        e:"한성이 함락된 뒤 백제는 웅진(지금의 공주)으로 도읍을 옮겼습니다." },
+      { q:"신라가 당과 연합하여 백제를 멸망시킨 해는 언제일까요?", o:["660년","668년","676년","698년"], a:1,
+        e:"신라와 당의 연합군은 660년 백제를 멸망시켰습니다. (668년에는 고구려가 멸망)" },
+      { q:"통일신라의 지방 행정 조직으로 전국을 정비한 체제는?", o:["9주 5소경","5경 15부","22담로","5도 양계"], a:1,
+        e:"통일신라는 전국을 9주 5소경으로 정비해 지방을 통치했습니다." }
+    ],
+    3: [
+      { q:"신라 신문왕이 왕권 강화를 위해 관료전을 지급하며 폐지한 토지제도는?", o:["녹읍","정전","공음전","식읍"], a:1,
+        e:"신문왕은 관료전을 지급하고 녹읍을 폐지해 진골 귀족의 경제적 기반을 약화시켰습니다." },
+      { q:"통일신라의 중앙 정치 기구 중 국왕 직속으로 국정을 총괄한 최고 행정 기구는?", o:["집사부","화백회의","상대등","병부"], a:1,
+        e:"집사부는 통일신라에서 국왕 직속으로 국정을 총괄한 최고 행정 기구입니다." },
+      { q:"통일신라의 군사 조직으로 중앙에 9개, 지방에 10개를 둔 제도는?", o:["9서당 10정","5군영","2군 6위","5위도총부"], a:1,
+        e:"통일신라는 중앙에 9서당, 지방에 10정을 두어 군사 체제를 정비했습니다." },
+      { q:"신라 하대에 진골 귀족 간 왕위 쟁탈전이 극심해진 배경으로 옳은 것은?", o:["골품제의 모순과 왕권 약화","과거제 도입","불교 공인","균전제 실시"], a:1,
+        e:"골품제의 모순이 커지며 진골 귀족 사이의 왕위 다툼이 격화되고 왕권이 약화되었습니다." }
+    ],
+    4: [
+      { q:"신라 중대(中代)의 시작을 연 것으로 평가되는 왕은?", o:["무열왕(태종무열왕)","문무왕","신문왕","성덕왕"], a:1,
+        e:"진골 출신인 태종 무열왕이 즉위하며 신라 중대가 시작되었습니다." },
+      { q:"신문왕이 김흠돌의 난을 진압한 뒤 강화하려 했던 것은?", o:["왕권","화백회의의 권한","골품제","지방 호족의 세력"], a:1,
+        e:"신문왕은 김흠돌의 난을 진압한 뒤 관료전 지급·녹읍 폐지 등으로 전제 왕권을 강화했습니다." },
+      { q:"신라 원성왕 때 유교 경전의 이해 수준에 따라 관리를 선발하고자 했던 제도는?", o:["독서삼품과","과거제","현량과","음서제"], a:1,
+        e:"원성왕은 유교 경전의 이해 수준에 따라 관리를 뽑는 독서삼품과를 시행했습니다." },
+      { q:"신라 말기에 성장하여 이후 고려 건국의 기반이 된 지방 세력은?", o:["호족","진골 귀족","6두품","왕족"], a:1,
+        e:"신라 말에 성장한 지방 호족은 이후 고려 건국의 기반이 되었습니다." }
+    ]
+  }
+};
+
+const difficultyNames = { 1:"1단계", 2:"2단계", 3:"3단계", 4:"4단계" };
+
+let selectedCategory = null;
+let selectedDifficulty = null;
+let activeQuizList = [];
+let currentIdx = 0;
+let correctCount = 0;
+let streak = 0;
+let bestStreak = 0;
+let answered = false;
+let wrongLog = [];
+const answers = [];
+
+/* ── 사운드 ─────────────────────────────────────── */
+let actx = null, muted = false;
+try{ muted = localStorage.getItem("history-quiz-mute")==="1"; }catch(e){}
+function ac(){
+  if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; } }
+  if(actx && actx.state==="suspended"){ try{ actx.resume(); }catch(e){} }
+  return actx;
+}
+function tone(freq,dur,type,vol,delay,slideTo){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t0=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(freq,t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),t0+dur);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.15:vol,t0+.014);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+dur+.03);
+}
+function thud(){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t0=c.currentTime;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type="sine"; o.frequency.setValueAtTime(140,t0); o.frequency.exponentialRampToValueAtTime(60,t0+.28);
+  g.gain.setValueAtTime(.22,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+.3);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+.32);
+}
+const sfx = {
+  right(){ tone(784,.16,"triangle",.14); tone(1046,.2,"triangle",.11,null,.09); tone(1318,.3,"triangle",.08,.18); },
+  wrong(){ thud(); tone(220,.18,"sawtooth",.06,0,150); },
+  pick(){ tone(560,.05,"triangle",.05); },
+  finish(){ [523,659,784,1046].forEach((f,i)=>tone(f,.34,"triangle",.12,i*.11)); }
+};
+function syncMute(){
+  const b=document.getElementById("muteBtn"); if(!b) return;
+  b.textContent = muted?"🔇":"🔊";
+  b.setAttribute("data-off", muted?"1":"0");
+  b.setAttribute("aria-label", muted?"효과음 켜기":"효과음 끄기");
+}
+document.getElementById("muteBtn").addEventListener("click",()=>{
+  muted=!muted;
+  try{ localStorage.setItem("history-quiz-mute", muted?"1":"0"); }catch(e){}
+  syncMute(); if(!muted) sfx.pick();
+  toast(muted?"🔇 효과음 꺼짐":"🔊 효과음 켜짐");
+});
+syncMute();
+
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1500);
+}
+
+/* ── 화면 ───────────────────────────────────────── */
+function showScreen(screenId){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  const el=document.getElementById(screenId);
+  if(el) el.classList.add("active");
+  window.scrollTo({top:0,behavior:"instant" in window?"instant":"auto"});
+}
+function goToCategory(){ showScreen("category-screen"); }
+function selectCategory(category){
+  selectedCategory = category;
+  document.getElementById("difficulty-category-tag").innerText = categoryNames[category];
+  showScreen("difficulty-screen");
+}
+function goToDifficulty(){ showScreen("difficulty-screen"); }
+function selectDifficulty(level){
+  selectedDifficulty = level;
+  activeQuizList = quizData[selectedCategory][level];
+  startGame();
+}
+function startGame(){
+  currentIdx = 0;
+  correctCount = 0;
+  streak = 0;
+  bestStreak = 0;
+  answered = false;
+  wrongLog = [];
+  answers.length = 0;
+  document.getElementById("quiz-tag").innerText = `${categoryNames[selectedCategory]} · ${difficultyNames[selectedDifficulty]}`;
+  showScreen("quiz-screen");
+  loadQuestion();
+}
+
+function loadQuestion(){
+  if(currentIdx >= activeQuizList.length){ 
+    if(streak>bestStreak) bestStreak=streak;
+    endGame(); return; 
+  }
+  answered = false;
+  const qz = activeQuizList[currentIdx];
+
+  document.getElementById("question-number").innerText = `문제 ${currentIdx+1} / ${activeQuizList.length}`;
+  document.getElementById("score-counter").innerText = `맞춘 개수: ${correctCount}`;
+  document.getElementById("streak-badge").innerText = `🔥 연속 정답 ${streak}`;
+  document.getElementById("question-text").innerHTML =
+    `<span class="qnum">${currentIdx+1}</span>${qz.q}`;
+
+  const pct = (currentIdx / activeQuizList.length) * 100;
+  document.getElementById("progress-fill").style.width = pct + "%";
+
+  const numChars = ["①","②","③","④"];
+  for(let i=0;i<4;i++){
+    const btn = document.getElementById("opt"+(i+1));
+    btn.className = "opt";
+    btn.disabled = false;
+    btn.querySelector(".tx").innerText = qz.o[i];
+    btn.querySelector(".mark").textContent = "";
+  }
+  const fb=document.getElementById("feedback");
+  fb.className="feedback";
+  const qc=document.getElementById("qcard");
+  if(qc) void qc.offsetWidth;
+}
+
+function submitAnswer(chosenNum){
+  if(answered) return;
+  answered = true;
+  ac();
+  const qz = activeQuizList[currentIdx];
+  const isRight = (chosenNum === qz.a);
+
+  for(let i=1;i<=4;i++){
+    const btn=document.getElementById("opt"+i);
+    btn.disabled = true;
+    if(i===qz.a){ btn.classList.add("correct"); btn.querySelector(".mark").textContent="○"; }
+    else if(i===chosenNum){ btn.classList.add("wrong"); btn.querySelector(".mark").textContent="×"; }
+    else { btn.classList.add("dim"); }
+  }
+
+  const fb=document.getElementById("feedback");
+  const head=document.getElementById("fbHead");
+  const exp=document.getElementById("fbExp");
+
+  if(isRight){
+    correctCount++;
+    streak++;
+    if(streak>bestStreak) bestStreak=streak;
+    sfx.right();
+    fb.className="feedback on ok";
+    head.innerHTML = `<span class="mk ok">○</span>정답입니다!${streak>=2?` <span style="color:#b03a2c">🔥 ${streak}연속</span>`:""}`;
+  }else{
+    streak = 0;
+    sfx.wrong();
+    wrongLog.push(qz);
+    fb.className="feedback on no";
+    head.innerHTML = `<span class="mk no">×</span>아쉬워요! 정답은 <b style="color:#2f7d55">${qz.a}번 · ${qz.o[qz.a-1]}</b>`;
+  }
+  exp.innerHTML = `<b>해설</b> · ${qz.e}`;
+
+  answers.push({q:qz.q, picked:chosenNum, a:qz.a, ok:isRight});
+
+  document.getElementById("score-counter").innerText = `맞춘 개수: ${correctCount}`;
+  document.getElementById("streak-badge").innerText = `🔥 연속 정답 ${streak}`;
+  const pct = ((currentIdx+1) / activeQuizList.length) * 100;
+  document.getElementById("progress-fill").style.width = pct + "%";
+
+  const nextBtn=document.getElementById("nextBtn");
+  nextBtn.textContent = (currentIdx+1>=activeQuizList.length) ? "결과 보기 →" : "다음 문제 →";
+  nextBtn.focus({preventScroll:true});
+}
+
+function nextQuestion(){
+  if(!answered) return;
+  currentIdx++;
+  if(currentIdx >= activeQuizList.length){
+    if(streak>bestStreak) bestStreak=streak;
+    endGame();
+  }else{
+    loadQuestion();
+  }
+}
+document.getElementById("nextBtn").addEventListener("click", nextQuestion);
+
+function endGame(){
+  const total = activeQuizList.length;
+  showScreen("result-screen");
+  sfx.finish();
+
+  document.getElementById("result-score").innerText = correctCount;
+  document.getElementById("result-total").innerText = total;
+  const acc = total? Math.round(correctCount/total*100):0;
+  document.getElementById("result-acc").innerText = acc + "%";
+  document.getElementById("result-streak").innerText = bestStreak + "회";
+
+  let grade = "3급";
+  if(correctCount === total) grade = "1급";
+  else if(correctCount >= Math.ceil(total*0.75)) grade = "2급";
+  else if(correctCount >= Math.ceil(total*0.5)) grade = "3급";
+  else grade = "재도전";
+  document.getElementById("result-grade").innerText = grade;
+
+  let msg = "";
+  if(correctCount === total){
+    msg = "대단합니다! 만점입니다! 완벽한 한국사 마스터이시군요! 🎉🏆 최고예요!";
+  }else if(correctCount >= Math.ceil(total*0.75)){
+    msg = "훌륭한 성적입니다! 조금만 더 다듬으면 만점입니다. 파이팅! 🔥";
+  }else if(correctCount >= Math.ceil(total*0.5)){
+    msg = "절반 이상 맞추셨네요! 다음 판에는 더 높은 점수에 도전해봐요! 👍";
+  }else{
+    msg = "한국사 공부를 조금 더 하고 도전해볼까요? 다음 번엔 다 맞출 수 있도록 화이팅! 💪";
+  }
+  document.getElementById("result-message").innerText = msg;
+
+  const seal=document.getElementById("result-seal");
+  seal.textContent = grade==="재도전" ? "다시\n도전" : "합격\n기원";
+  seal.style.whiteSpace="pre-line";
+
+  const rv=document.getElementById("result-review");
+  if(wrongLog.length){
+    rv.innerHTML = `<div class="p-title" style="margin-bottom:6px">틀린 문제 해설</div>` +
+      wrongLog.map(w=>`<div class="rv"><q>${w.q}</q><small>정답 ${w.a}번 · ${w.o[w.a-1]} — ${w.e}</small></div>`).join("");
+  }else{
+    rv.innerHTML = `<div class="note" style="color:#2f7d55">틀린 문제가 없어요. 완벽합니다! ✨</div>`;
+  }
+
+  /* 홈 화면 기록 갱신 (기존 기능 유지) */
+  if(selectedCategory && selectedDifficulty){
+    document.getElementById("home-score-display").innerText =
+      `최근 기록: ${categoryNames[selectedCategory]} ${difficultyNames[selectedDifficulty]} - ${correctCount} / ${total} 개`;
+    document.getElementById("home-message-display").innerText = msg;
+  }
+  try{
+    const prev = JSON.parse(localStorage.getItem("history-quiz-best")||"{}");
+    const key = selectedCategory+"-"+selectedDifficulty;
+    if(!prev[key] || correctCount > prev[key].score){
+      prev[key] = { score: correctCount, total: total, at: Date.now() };
+      localStorage.setItem("history-quiz-best", JSON.stringify(prev));
+    }
+  }catch(e){}
+}
+
+function goToHome(){
+  showScreen("home-screen");
+}
+
+/* ── 소스 다운로드 (기존 기능 유지) ───────────────── */
+function downloadGameSource(){
+  const fullCode = document.documentElement.outerHTML;
+  const blob = new Blob(["<!DOCTYPE html>\n" + fullCode], { type:"text/html;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "korean_history_quiz_game.html";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  toast("💾 게임 파일을 저장했습니다");
+}
+
+/* ── 키보드 1~4 / Enter ───────────────────────────── */
+document.addEventListener("keydown", function(e){
+  if(!document.getElementById("quiz-screen").classList.contains("active")) return;
+  if(e.key>="1" && e.key<="4" && !answered){ submitAnswer(Number(e.key)); return; }
+  if((e.key==="Enter"||e.key===" ") && answered){
+    e.preventDefault(); nextQuestion();
+  }
+});
+</script>
+</body>
+</html>

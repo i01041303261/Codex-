@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>6학년·중1 수학 타워 빌더</title>
+<style>
+  :root{
+    --ink:#eef3fb; --muted:#9fb0cc; --line:rgba(255,255,255,.1);
+    --cyan:#4dd7e6; --blue:#4a8cff; --gold:#ffcf5c; --green:#3ddc97; --rose:#ff6b81;
+    --panel:rgba(14,22,40,.86); --panel2:rgba(8,13,26,.94);
+    --shadow:0 24px 60px -24px #000;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --pad-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    min-height:100vh;display:flex;justify-content:center;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:#05070f;padding:12px 12px calc(18px + var(--pad-b));touch-action:manipulation;overflow-x:hidden;
+    word-break:keep-all;overflow-wrap:break-word;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(760px 460px at 50% -10%,rgba(74,140,255,.22),transparent 62%),
+      radial-gradient(600px 420px at 100% 10%,rgba(77,215,230,.13),transparent 64%),
+      radial-gradient(700px 460px at 0% 90%,rgba(61,220,151,.1),transparent 66%),
+      linear-gradient(170deg,#070c18,#04060e 62%,#03050b);
+  }
+  .app{width:100%;max-width:820px}
+  /* ── 헤더 ── */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .brand{display:flex;align-items:center;gap:9px;min-width:0}
+  .brand .mk{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;
+    background:linear-gradient(150deg,rgba(77,215,230,.24),rgba(74,140,255,.2));border:1px solid rgba(77,215,230,.4);
+    box-shadow:0 0 20px -6px rgba(77,215,230,.7);font-size:16px}
+  .brand b{font-size:.85rem;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:800}
+  .icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;cursor:pointer;font-size:1rem;
+    border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);transition:.18s;touch-action:manipulation}
+  .icon:hover{background:rgba(255,255,255,.12);border-color:rgba(77,215,230,.5)}
+  .icon[data-off="1"]{opacity:.5}
+  /* ── 화면 ── */
+  .screen{display:none}
+  .screen.active{display:block;animation:fade .3s var(--ease) both}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .panel{background:linear-gradient(158deg,var(--panel),var(--panel2));border:1px solid var(--line);
+    border-radius:16px;padding:15px;margin-bottom:10px;box-shadow:var(--shadow)}
+  .p-title{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:9px;font-weight:800}
+  .home-head{text-align:center;padding:18px 14px 14px;margin-bottom:10px;position:relative;overflow:hidden;
+    border:1px solid var(--line);border-radius:18px;background:linear-gradient(165deg,rgba(20,34,62,.94),rgba(6,10,20,.97));box-shadow:var(--shadow)}
+  .home-head::before{content:"";position:absolute;left:50%;top:-120px;width:360px;height:360px;translate:-50% 0;border-radius:50%;
+    background:radial-gradient(circle,rgba(74,140,255,.28),transparent 62%);pointer-events:none}
+  .home-head h1{position:relative;font-size:clamp(1.28rem,5.4vw,1.75rem);line-height:1.3;letter-spacing:-.01em}
+  .home-head h1 span{display:block;font-size:.7rem;letter-spacing:.28em;color:var(--cyan);font-weight:800;margin-bottom:6px}
+  .home-head p{position:relative;margin-top:6px;font-size:.82rem;color:var(--muted);line-height:1.6}
+  .home-head .art{position:relative;margin:14px auto 2px;width:120px;height:96px}
+  .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .cat{position:relative;border-radius:14px;padding:13px 13px 12px;border:1px solid var(--line);
+    background:linear-gradient(160deg,rgba(28,40,66,.9),rgba(10,16,30,.94));display:flex;flex-direction:column;gap:6px;
+    transition:.2s var(--ease);overflow:hidden}
+  .cat::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c,#4a8cff)}
+  .cat:hover{transform:translateY(-2px);border-color:rgba(77,215,230,.42);box-shadow:0 18px 36px -24px rgba(77,215,230,.9)}
+  .cat h4{font-size:.9rem;display:flex;align-items:center;gap:5px;justify-content:space-between}
+  .cat h4 .em{font-size:1.05rem}
+  .cat .st{font-size:.71rem;color:var(--muted)}
+  .cat .st b{color:#e8f1ff;font-weight:700}
+  .cat .ch{font-size:.7rem;font-weight:800;color:#9be7b6;display:inline-flex;align-items:center;gap:4px}
+  .cat .ch.out{color:#ff9aa8}
+  button{font-family:inherit;cursor:pointer;touch-action:manipulation;border-radius:12px;transition:.16s var(--ease)}
+  button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .btn{width:100%;padding:12px 14px;font-size:.88rem;font-weight:800;border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(160deg,rgba(46,62,96,.95),rgba(20,28,48,.95));color:var(--ink);min-height:44px}
+  .btn:hover:not(:disabled){filter:brightness(1.12)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.go{background:linear-gradient(150deg,#4dd7e6,#2f8fd1);color:#04151c;border-color:#8be9f2;
+    box-shadow:0 14px 28px -16px rgba(77,215,230,.95),inset 0 1px 0 rgba(255,255,255,.4)}
+  .btn.go:hover:not(:disabled){filter:brightness(1.05)}
+  .btn.ghost{background:rgba(255,255,255,.045)}
+  .btn.tiny{width:auto;min-height:36px;padding:8px 12px;font-size:.76rem}
+  .btn.warn{background:linear-gradient(150deg,#ff9f45,#e2721f);color:#221003;border-color:#ffc089}
+  .row{display:flex;gap:8px;align-items:center}
+  /* ── 설명 화면 ── */
+  .explain-head{text-align:center;margin-bottom:12px}
+  .explain-head h2{font-size:1.2rem;margin-bottom:5px}
+  .explain-sum{font-size:.82rem;color:var(--muted);line-height:1.62}
+  .units{list-style:none;display:grid;gap:7px;margin:12px 0}
+  .units li{border-left:3px solid rgba(77,215,230,.7);background:rgba(255,255,255,.035);border-radius:0 10px 10px 0;
+    padding:10px 12px;font-size:.79rem;line-height:1.55;color:#c6d3e8}
+  .units li strong{color:#eaf4ff;display:block;margin-bottom:3px;font-size:.83rem}
+  /* ── 플레이 ── */
+  .play{display:grid;grid-template-columns:268px 1fr;gap:10px;align-items:start}
+  @media(max-width:720px){.play{grid-template-columns:1fr}}
+  /* 타워 스테이지 */
+  .stage{position:relative;overflow:hidden;border-radius:16px;border:1px solid rgba(120,170,255,.22);
+    height:420px;box-shadow:inset 0 0 60px rgba(0,0,0,.6),var(--shadow);touch-action:manipulation;
+    background:linear-gradient(180deg,#0a1024 0%,#0e1a33 42%,#16324f 74%,#1d4a4a 100%)}
+  @media(max-width:720px){.stage{height:46vh;min-height:264px;max-height:360px}}
+  .stage .sun{position:absolute;right:16px;top:14px;width:44px;height:44px;border-radius:50%;
+    background:radial-gradient(circle,#fff3c4,#ffd166 45%,rgba(255,180,80,0) 72%);filter:blur(.3px);opacity:.9;
+    transition:opacity .6s,transform .6s}
+  .stars{position:absolute;inset:0;opacity:0;transition:opacity .8s}
+  .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 5px rgba(255,255,255,.9);animation:tw 3s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.35}50%{opacity:1}}
+  .moon{position:absolute;right:20px;top:18px;width:38px;height:38px;border-radius:50%;
+    background:radial-gradient(circle at 34% 32%,#fdfcf3,#cfd6e6 60%,#9aa6bf);
+    box-shadow:0 0 32px rgba(220,230,255,.55);opacity:0;transition:opacity .9s,transform .9s;transform:translateY(-8px)}
+  .clouds{position:absolute;inset:0;pointer-events:none}
+  .cloud{position:absolute;border-radius:99px;background:rgba(255,255,255,.5);filter:blur(6px);opacity:.55;
+    animation:drift linear infinite}
+  @keyframes drift{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+  .camera{position:absolute;left:0;right:0;bottom:0;height:100%;transition:transform .55s var(--ease);will-change:transform}
+  .ground{position:absolute;left:0;right:0;bottom:0;height:64px;
+    background:linear-gradient(180deg,#2b6b53 0 12%,#1d4a3a 12%,#173a2e 60%,#0f2620 100%)}
+  .ground::before{content:"";position:absolute;left:0;right:0;top:-5px;height:8px;
+    background:radial-gradient(circle at 10px -2px,#3f8f6b 6px,transparent 7px) repeat-x;background-size:20px 8px}
+  .tower{position:absolute;left:50%;bottom:64px;translate:-50% 0;width:160px}
+  .floor{position:absolute;left:50%;translate:-50% 0;width:118px;height:26px;border-radius:4px;
+    background:linear-gradient(180deg,#c88b4e,#a5683a 55%,#7d4c28);border:1px solid #5e3720;
+    box-shadow:inset 0 1px 0 rgba(255,220,180,.4),0 3px 8px rgba(0,0,0,.45);
+    opacity:0;transform:translate(-50%,-110px);transition:opacity .2s}
+  .floor.show{opacity:1;animation:drop .62s cubic-bezier(.3,1.6,.5,1) forwards}
+  @keyframes drop{
+    0%{transform:translate(-50%,-120px) rotate(-4deg);opacity:0}
+    22%{opacity:1}
+    58%{transform:translate(-50%,3px) rotate(1.5deg)}
+    76%{transform:translate(-50%,-6px) rotate(-1deg)}
+    100%{transform:translate(-50%,0) rotate(0);opacity:1}
+  }
+  .floor.done{opacity:1;transform:translate(-50%,0)}
+  .floor .tape{position:absolute;left:6px;right:6px;top:4px;height:11px;border-radius:2px;background:rgba(255,236,200,.35)}
+  .floor .tape::before,.floor .tape::after{content:"";position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.5)}
+  .floor .tape::before{left:34%}.floor .tape::after{left:66%}
+  .floor .num{position:absolute;right:4px;bottom:1px;font-size:8px;font-weight:800;color:rgba(255,235,205,.55)}
+  .floor.glow{box-shadow:0 0 18px rgba(255,207,92,.9),inset 0 1px 0 rgba(255,240,200,.7)}
+  .ruler{position:absolute;left:8px;bottom:64px;width:40px;height:100%;pointer-events:none;z-index:5}
+  .ruler i{position:absolute;left:0;width:8px;height:1px;background:rgba(255,255,255,.28)}
+  .ruler i.major{width:15px;background:rgba(120,215,235,.7)}
+  .ruler span{position:absolute;left:18px;font-size:8.5px;color:#c6e6ff;text-shadow:0 1px 4px #000,0 0 6px rgba(0,0,0,.9);transform:translateY(-50%);white-space:nowrap;letter-spacing:.02em}
+  .hudH{position:absolute;right:9px;top:9px;z-index:6;text-align:right;background:rgba(4,10,20,.62);
+    border:1px solid rgba(120,200,235,.3);border-radius:11px;padding:7px 11px;backdrop-filter:blur(6px)}
+  .hudH b{display:block;font-size:1.32rem;line-height:1;color:#9ef0ff;text-shadow:0 0 18px rgba(77,215,230,.8);font-variant-numeric:tabular-nums}
+  .hudH span{font-size:.6rem;letter-spacing:.16em;color:#9fb8d0}
+  .hudQ{position:absolute;left:9px;top:9px;z-index:6;background:rgba(4,10,20,.62);border:1px solid rgba(255,255,255,.14);
+    border-radius:11px;padding:6px 10px;font-size:.68rem;color:#cfe0f5;backdrop-filter:blur(6px)}
+  .stage .boom{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0}
+  .stage .boom.go{animation:boomFade .9s ease-out forwards}
+  @keyframes boomFade{0%{opacity:0}16%{opacity:1}100%{opacity:0}}
+  .stage .ring{position:absolute;left:50%;top:52%;translate:-50% -50%;width:60px;height:60px;border-radius:50%;
+    border:3px solid rgba(255,207,92,.9);animation:ringOut .9s ease-out forwards}
+  @keyframes ringOut{from{transform:scale(.3);opacity:1}to{transform:scale(4.4);opacity:0}}
+  .stage .flytext{position:absolute;left:50%;translate:-50% 0;font-weight:900;color:#ffe9a8;font-size:1.05rem;
+    text-shadow:0 2px 12px rgba(0,0,0,.8);animation:flyUp 1.1s ease-out forwards}
+  @keyframes flyUp{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}25%{opacity:1;transform:translate(-50%,-4px) scale(1.1)}
+    100%{opacity:0;transform:translate(-50%,-56px) scale(1)}}
+  /* 문제 패널 */
+  .qpanel{border-radius:16px;border:1px solid var(--line);background:linear-gradient(158deg,rgba(18,28,48,.96),rgba(7,11,22,.97));
+    padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
+  .qmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.72rem;color:var(--muted)}
+  .qmeta b{color:#e8f1ff}
+  .qprog{height:6px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+  .qprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f8fd1,#4dd7e6);transition:width .4s var(--ease)}
+  .qtext{font-size:1.02rem;line-height:1.62;font-weight:700;word-break:keep-all;color:#f2f7ff;min-height:56px}
+  .opts{display:grid;gap:7px}
+  .opt{display:flex;align-items:flex-start;gap:8px;width:100%;text-align:left;padding:11px 12px;min-height:44px;
+    border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.045);color:#e6eefa;font-size:.86rem;line-height:1.5}
+  .opt:hover:not(:disabled){border-color:rgba(77,215,230,.55);background:rgba(77,215,230,.09)}
+  .opt:disabled{cursor:default}
+  .opt .n{flex:0 0 auto;width:21px;height:21px;border-radius:6px;display:grid;place-items:center;font-size:.68rem;font-weight:800;
+    background:rgba(255,255,255,.1);color:#cfe0f5}
+  .opt.ok{border-color:#3ddc97;background:rgba(61,220,151,.14)}
+  .opt.ok .n{background:#3ddc97;color:#04241a}
+  .opt.no{border-color:#ff6b81;background:rgba(255,107,129,.14)}
+  .opt.no .n{background:#ff6b81;color:#2b0509}
+  .qfx{min-height:20px;font-size:.78rem;font-weight:700}
+  .qfx.ok{color:#7ef0b8}.qfx.no{color:#ff9aa8}
+  /* 결과 */
+  .result{border:1px solid rgba(255,207,92,.32);border-radius:18px;padding:20px 16px;text-align:center;
+    background:linear-gradient(165deg,rgba(40,34,20,.9),rgba(8,11,20,.97));box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .result::before{content:"";position:absolute;left:50%;top:-120px;width:340px;height:340px;translate:-50% 0;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,207,92,.26),transparent 64%)}
+  .result h2{position:relative;font-size:1.3rem;margin-bottom:4px}
+  .result .bigH{position:relative;margin:12px auto;display:inline-flex;align-items:baseline;gap:5px;
+    padding:12px 22px;border-radius:14px;border:1px dashed rgba(255,207,92,.55);background:rgba(255,207,92,.09)}
+  .result .bigH b{font-size:2.1rem;color:#ffe08a;line-height:1;font-variant-numeric:tabular-nums}
+  .result .bigH span{font-size:.9rem;color:#ffe08a}
+  .result .msg{position:relative;font-size:.86rem;line-height:1.68;color:#e6ddc4;margin:6px auto 0;max-width:420px}
+  .rstats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:14px 0 4px}
+  .rstats div{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:9px 6px;background:rgba(255,255,255,.035)}
+  .rstats b{display:block;font-size:.6rem;letter-spacing:.1em;color:var(--muted);margin-bottom:3px}
+  .rstats span{font-size:.92rem;font-weight:800}
+  .notice{margin:12px 0 2px;padding:11px 12px;border-radius:10px;font-size:.8rem;line-height:1.55;
+    background:rgba(255,107,129,.12);border:1px solid rgba(255,107,129,.4);color:#ffc3cb;text-align:center}
+  /* 오답노트 */
+  .review-head{text-align:center;margin-bottom:10px}
+  .review-head h2{font-size:1.15rem;color:#ffb86c;margin-bottom:4px}
+  .review-head p{font-size:.78rem;color:var(--muted)}
+  .rvmeta{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);margin-bottom:8px}
+  .rvfx{min-height:22px;text-align:center;font-size:.8rem;font-weight:800;margin-top:10px}
+  #toast{position:fixed;left:50%;bottom:calc(16px + var(--pad-b));translate:-50% 0;z-index:60;
+    background:rgba(10,18,34,.96);border:1px solid rgba(77,215,230,.45);color:#9ef0ff;padding:9px 16px;border-radius:99px;
+    font-size:.79rem;opacity:0;pointer-events:none;transition:.28s;transform:translate(-50%,8px)}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(max-width:720px){
+    .cat-grid{gap:8px}
+    .qtext{font-size:.96rem;min-height:48px}
+    .stage{border-radius:14px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.001s!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand"><span class="mk">📐</span><b>수학 타워 빌더</b></div>
+    <button class="icon" id="muteBtn" title="효과음" aria-label="효과음 켜기/끄기">🔊</button>
+  </div>
+
+  <!-- 홈 -->
+  <div id="screen-home" class="screen active">
+    <div class="home-head">
+      <h1><span>MATH TOWER BUILDER</span>📐 수학 타워 빌더 📏</h1>
+      <p>문제를 맞힐 때마다 상자 타워가 15cm씩 실제로 쌓여 올라갑니다.<br>구름을 지나 성층권, 우주까지 — 어디까지 올라갈 수 있을까요?</p>
+      <svg class="art" viewBox="0 0 120 96" aria-hidden="true">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4dd7e6" stop-opacity=".9"/><stop offset="1" stop-color="#2f6fd1" stop-opacity=".2"/></linearGradient></defs>
+        <g fill="url(#hg)">
+          <rect x="30" y="70" width="60" height="12" rx="2"/><rect x="33" y="58" width="54" height="12" rx="2" opacity=".92"/>
+          <rect x="36" y="46" width="48" height="12" rx="2" opacity=".84"/><rect x="39" y="34" width="42" height="12" rx="2" opacity=".76"/>
+          <rect x="42" y="22" width="36" height="12" rx="2" opacity=".68"/><rect x="45" y="10" width="30" height="12" rx="2" opacity=".6"/>
+        </g>
+        <g fill="#ffcf5c" opacity=".9"><circle cx="100" cy="18" r="2"/><circle cx="16" cy="30" r="1.6"/><circle cx="106" cy="46" r="1.4"/></g>
+      </svg>
+    </div>
+    <div class="panel">
+      <div class="p-title">학년 · 학기 선택</div>
+      <div id="category-grid" class="cat-grid"></div>
+    </div>
+    <p style="font-size:.72rem;color:var(--muted);text-align:center;line-height:1.6">학기마다 도전 기회는 3번! 20문제 중 정답마다 타워 한 층(15cm)이 쌓입니다.</p>
+  </div>
+
+  <!-- 학기 설명 -->
+  <div id="screen-explain" class="screen">
+    <div class="panel">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px">
+        <button class="btn ghost tiny" id="explainBack">← 홈으로</button>
+        <span style="font-size:.7rem;letter-spacing:.16em;color:var(--cyan)">COURSE INFO</span>
+      </div>
+      <div class="explain-head">
+        <h2 id="explain-title">학기 설명</h2>
+        <p id="explain-summary" class="explain-sum"></p>
+      </div>
+      <ul id="explain-units" class="units"></ul>
+      <button class="btn go" id="startBtn">문제 풀러 가기! 🚀</button>
+    </div>
+  </div>
+
+  <!-- 플레이 -->
+  <div id="screen-play" class="screen">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px">
+      <button class="btn ghost tiny" id="playHome">← 그만두기</button>
+      <span id="playTag" style="font-size:.7rem;letter-spacing:.12em;color:var(--cyan)">학기</span>
+    </div>
+    <div class="play">
+      <div class="stage" id="stage">
+        <div class="sun" id="sun"></div>
+        <div class="stars" id="stars"></div>
+        <div class="moon" id="moon"></div>
+        <div class="clouds" id="clouds"></div>
+        <div class="hudH"><b id="heightVal">0</b><span>HEIGHT · CM</span></div>
+        <div class="hudQ" id="floorTag">0층 · 0cm</div>
+        <div class="camera" id="camera">
+          <div class="ruler" id="ruler"></div>
+          <div class="ground"></div>
+          <div class="tower" id="tower"></div>
+        </div>
+        <div class="boom" id="boom"></div>
+      </div>
+      <div class="qpanel">
+        <div class="qmeta"><span id="quiz-semester">학기</span><span>문제 <b id="quiz-progress">1 / 20</b></span></div>
+        <div class="qprog"><i id="qbar"></i></div>
+        <div id="question-box" class="qtext">문제가 여기에 표시됩니다.</div>
+        <div id="options-box" class="opts"></div>
+        <div id="qfx" class="qfx"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 결과 -->
+  <div id="screen-result" class="screen">
+    <div class="panel">
+      <div class="result">
+        <h2>🎮 게임 종료!</h2>
+        <p style="position:relative;font-size:.82rem;color:#d9cfb6">총 20문제 중 <b id="result-score" style="color:#ffe08a">0</b>문제를 맞혔습니다!</p>
+        <div class="bigH"><b id="height-result">0</b><span>cm</span></div>
+        <div class="msg" id="result-praise">칭찬 문구 영역</div>
+        <div class="rstats">
+          <div><b>정답</b><span id="rs-score">0 / 20</span></div>
+          <div><b>층수</b><span id="rs-floor">0층</span></div>
+          <div><b>최고 높이</b><span id="rs-best">0cm</span></div>
+        </div>
+        <div id="result-review-notice" class="notice" style="display:none"></div>
+      </div>
+      <button id="btn-result-review" class="btn warn" style="display:none;margin-top:10px">오답 다시 풀기 ✏️</button>
+      <button id="btn-result-home" class="btn ghost" style="margin-top:9px">홈으로 돌아가기 🏠</button>
+    </div>
+  </div>
+
+  <!-- 오답노트 -->
+  <div id="screen-review" class="screen">
+    <div class="panel">
+      <div class="review-head">
+        <h2>📝 오답노트 다시 풀기</h2>
+        <p>틀린 문제를 모두 맞히면 홈으로 돌아갈 수 있어요!</p>
+      </div>
+      <div class="rvmeta"><span id="review-progress">남은 문제: 0개</span><span>🔄 틀리면 뒤로 다시 나와요</span></div>
+      <div id="review-question" class="qtext"></div>
+      <div id="review-options" class="opts" style="margin-top:9px"></div>
+      <div id="review-feedback" class="rvfx"></div>
+      <div id="review-complete" style="display:none;text-align:center;margin-top:12px">
+        <p style="font-size:.9rem;color:#7ef0b8;font-weight:800;margin-bottom:10px">🎉 오답을 모두 완료했습니다! 정말 잘했어요!</p>
+        <button class="btn go" id="reviewHome">홈으로 돌아가기 🏠</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =========================================================
+   학년/학기를 추가하려면 CATEGORIES, EXPLANATIONS, questionPool 에
+   "똑같은 key"로 데이터를 추가하면 카드·설명·출제가 자동 연결됩니다.
+   ========================================================= */
+
+const CATEGORIES = {
+  '6-1':  { label: '6학년 1학기',        emoji: '🌱', color: '#4a8cff' },
+  '6-2':  { label: '6학년 2학기',        emoji: '🌿', color: '#3ddc97' },
+  'm1-1': { label: '중학교 1학년 1학기', emoji: '📘', color: '#8f7bff' },
+  'm1-2': { label: '중학교 1학년 2학기', emoji: '📗', color: '#ff9f45' }
+};
+
+const EXPLANATIONS = {
+  '6-1': {
+    summary: '분수·소수의 나눗셈, 입체도형, 비와 비율을 배우는 학기예요!',
+    units: [
+      { name:'① 분수의 나눗셈', desc:'분수를 자연수나 다른 분수로 나누는 방법을 배워요.' },
+      { name:'② 각기둥과 각뿔', desc:'여러 가지 각기둥과 각뿔의 모양과 특징을 알아봐요.' },
+      { name:'③ 소수의 나눗셈', desc:'소수를 소수나 자연수로 나누는 방법을 배워요.' },
+      { name:'④ 비와 비율', desc:'두 수를 비교하는 비와 비율의 뜻을 배워요.' },
+      { name:'⑤ 여러 가지 그래프', desc:'그림그래프, 띠그래프, 원그래프로 자료를 나타내요.' },
+      { name:'⑥ 직육면체의 부피와 겉넓이', desc:'직육면체와 정육면체의 부피와 겉넓이를 구해요.' }
+    ]
+  },
+  '6-2': {
+    summary: '분수·소수의 나눗셈을 더 배우고, 비례식과 원, 여러 입체도형을 만나는 학기예요!',
+    units: [
+      { name:'① 분수의 나눗셈', desc:'분수를 분수로 나누는 방법을 더 배워요.' },
+      { name:'② 소수의 나눗셈', desc:'자연수를 소수로, 소수를 소수로 나누는 방법을 배워요.' },
+      { name:'③ 공간과 입체', desc:'쌓기나무 모양을 위, 앞, 옆에서 본 모양으로 나타내요.' },
+      { name:'④ 비례식과 비례배분', desc:'비례식을 풀고 전체를 일정한 비로 나누는 방법을 배워요.' },
+      { name:'⑤ 원의 넓이', desc:'원주율을 이용해 원의 둘레와 넓이를 구해요.' },
+      { name:'⑥ 원기둥, 원뿔, 구', desc:'원기둥, 원뿔, 구의 모양과 특징을 배워요.' }
+    ]
+  },
+  'm1-1': {
+    summary: '수와 문자, 방정식, 좌표평면까지! 중학교 수학의 기초를 다지는 학기예요.',
+    units: [
+      { name:'① 소인수분해와 최대공약수·최소공배수', desc:'수를 소수의 곱으로 나타내고, 공약수와 공배수를 구해요.' },
+      { name:'② 정수와 유리수', desc:'양수, 음수, 정수, 유리수의 뜻과 사칙연산을 배워요.' },
+      { name:'③ 문자와 식', desc:'문자를 사용해 식을 세우고 간단히 정리하는 방법을 배워요.' },
+      { name:'④ 일차방정식', desc:'방정식을 풀어 미지수 x의 값을 구하는 방법을 배워요.' },
+      { name:'⑤ 좌표평면과 그래프', desc:'좌표평면 위의 점을 나타내고 정비례·반비례 관계를 배워요.' }
+    ]
+  },
+  'm1-2': {
+    summary: '도형의 성질과 통계를 배우는 학기예요. 각과 도형, 입체도형을 깊이 있게 살펴봐요.',
+    units: [
+      { name:'① 기본도형과 위치 관계', desc:'점, 선, 면, 각의 뜻과 두 직선의 위치 관계를 배워요.' },
+      { name:'② 평행선과 각', desc:'동위각, 엇각, 맞꼭지각 등 각의 성질을 배워요.' },
+      { name:'③ 평면도형', desc:'다각형의 내각과 외각, 원과 부채꼴의 성질을 배워요.' },
+      { name:'④ 입체도형', desc:'다면체와 회전체의 종류, 부피와 겉넓이를 구해요.' },
+      { name:'⑤ 통계', desc:'자료를 정리해서 도수분포표와 상대도수를 구해요.' }
+    ]
+  }
+};
+
+const questionPool = {
+  '6-1': [
+    { q: "3/4 ÷ 2 의 값은 얼마인가요?", o: ["3/8", "1/2", "3/4", "3/2"], a: 0 },
+    { q: "2/3 ÷ 4 의 값은 얼마인가요?", o: ["1/6", "1/8", "1/12", "2/3"], a: 0 },
+    { q: "5/6 ÷ 5 의 값은 얼마인가요?", o: ["1/6", "1/5", "1/3", "5/6"], a: 0 },
+    { q: "4/5 ÷ 2/5 의 값은 얼마인가요?", o: ["1", "2", "3", "4"], a: 1 },
+    { q: "3/7 ÷ 6/7 의 값은 얼마인가요?", o: ["1/2", "2", "1/3", "3/2"], a: 0 },
+    { q: "7/8 ÷ 1/4 의 값은 얼마인가요?", o: ["7/2", "7/32", "2", "4/7"], a: 0 },
+    { q: "3/2 ÷ 3/4 의 값은 얼마인가요?", o: ["1", "2", "3", "4"], a: 1 },
+    { q: "2 ÷ 2/3 의 값은 얼마인가요?", o: ["3", "2", "1", "3/2"], a: 0 },
+    { q: "밑면이 삼각형이고 옆면이 모두 직사각형인 입체도형은 무엇인가요?", o: ["삼각뿔", "삼각기둥", "사각뿔", "사각기둥"], a: 1 },
+    { q: "각뿔의 옆면의 모양은 항상 어떤 도형인가요?", o: ["삼각형", "사각형", "원", "사다리꼴"], a: 0 },
+    { q: "사각기둥의 꼭짓점의 개수는 몇 개인가요?", o: ["4개", "6개", "8개", "10개"], a: 2 },
+    { q: "오각뿔의 면의 개수는 모두 몇 개인가요?", o: ["5개", "6개", "10개", "11개"], a: 1 },
+    { q: "각기둥에서 서로 평행하고 합동인 두 면을 무엇이라 하나요?", o: ["옆면", "밑면", "모서리", "꼭짓점"], a: 1 },
+    { q: "3.6 ÷ 4 의 값은 얼마인가요?", o: ["0.9", "1.2", "0.09", "9"], a: 0 },
+    { q: "7.2 ÷ 3 의 값은 얼마인가요?", o: ["2.1", "2.4", "2.9", "3.4"], a: 1 },
+    { q: "5.4 ÷ 0.6 의 값은 얼마인가요?", o: ["0.9", "8", "9", "90"], a: 2 },
+    { q: "12.6 ÷ 1.8 의 값은 얼마인가요?", o: ["6", "7", "8", "9"], a: 1 },
+    { q: "0.48 ÷ 0.06 의 값은 얼마인가요?", o: ["0.8", "6", "8", "80"], a: 2 },
+    { q: "남학생 6명과 여학생 4명의 수를 비로 나타내면?", o: ["4:6", "6:4", "6:10", "4:10"], a: 1 },
+    { q: "비율 3:5를 분수로 나타내면?", o: ["5/3", "3/5", "3/8", "5/8"], a: 1 },
+    { q: "백분율 75%를 소수로 나타내면?", o: ["0.75", "7.5", "0.075", "75"], a: 0 },
+    { q: "학생 25명 중 20명이 안경을 썼다면 안경을 쓴 학생의 비율은 몇 %인가요?", o: ["20%", "60%", "80%", "125%"], a: 2 },
+    { q: "비 4:5에서 기준량은 무엇인가요?", o: ["4", "5", "9", "20"], a: 1 },
+    { q: "전체에 대한 각 부분의 비율을 원 모양으로 나타낸 그래프는 무엇인가요?", o: ["막대그래프", "꺾은선그래프", "원그래프", "그림그래프"], a: 2 },
+    { q: "전체에 대한 각 부분의 비율을 띠 모양으로 나타낸 그래프는 무엇인가요?", o: ["띠그래프", "막대그래프", "원그래프", "꺾은선그래프"], a: 0 },
+    { q: "가로 3cm, 세로 4cm, 높이 5cm인 직육면체의 부피는 몇 cm³인가요?", o: ["12", "20", "60", "120"], a: 2 },
+    { q: "한 모서리의 길이가 4cm인 정육면체의 부피는 몇 cm³인가요?", o: ["16", "32", "48", "64"], a: 3 },
+    { q: "가로 2cm, 세로 3cm, 높이 4cm인 직육면체의 겉넓이는 몇 cm²인가요?", o: ["26", "36", "52", "104"], a: 2 },
+    { q: "한 모서리의 길이가 a인 정육면체의 겉넓이를 구하는 식은 무엇인가요?", o: ["4a²", "6a²", "a³", "8a²"], a: 1 },
+    { q: "부피의 단위 1m³는 몇 cm³와 같나요?", o: ["1,000 cm³", "10,000 cm³", "100,000 cm³", "1,000,000 cm³"], a: 3 }
+  ],
+  '6-2': [
+    { q: "2/3 ÷ 3/4 의 값은 얼마인가요?", o: ["8/9", "9/8", "1/2", "2"], a: 0 },
+    { q: "5/6 ÷ 2/3 의 값은 얼마인가요?", o: ["5/4", "4/5", "5/6", "6/5"], a: 0 },
+    { q: "7/9 ÷ 5/6 의 값은 얼마인가요?", o: ["14/15", "15/14", "7/10", "9/14"], a: 0 },
+    { q: "5/4 ÷ 2/3 의 값은 얼마인가요?", o: ["15/8", "8/15", "5/6", "3/2"], a: 0 },
+    { q: "10/3 ÷ 5/6 의 값은 얼마인가요?", o: ["2", "3", "4", "5"], a: 2 },
+    { q: "9 ÷ 2.5 의 값은 얼마인가요?", o: ["3.2", "3.6", "4.2", "4.6"], a: 1 },
+    { q: "6 ÷ 0.75 의 값은 얼마인가요?", o: ["6", "7", "8", "9"], a: 2 },
+    { q: "4.5 ÷ 1.5 의 값은 얼마인가요?", o: ["2", "3", "4", "5"], a: 1 },
+    { q: "8.4 ÷ 0.4 의 값은 얼마인가요?", o: ["12", "18", "21", "24"], a: 2 },
+    { q: "3 ÷ 8 을 반올림하여 소수 둘째 자리까지 나타내면?", o: ["0.37", "0.38", "0.4", "0.375"], a: 1 },
+    { q: "쌓기나무로 만든 입체도형을 위에서 내려다본 모양을 무엇이라 하나요?", o: ["평면도", "위에서 본 모양", "앞에서 본 모양", "옆에서 본 모양"], a: 1 },
+    { q: "쌓기나무 입체도형을 정확히 나타내기 위해 필요하지 않은 그림은 무엇인가요?", o: ["위에서 본 모양", "앞에서 본 모양", "옆에서 본 모양", "대각선에서 본 모양"], a: 3 },
+    { q: "쌓기나무로 쌓은 모양에서 위에서 본 모양에 쓰인 숫자를 모두 더하면 무엇을 알 수 있나요?", o: ["전체 쌓기나무의 개수", "가장 높은 층수", "보이는 면의 개수", "입체도형의 부피"], a: 0 },
+    { q: "비례식 3:4 = 6:x 에서 x의 값은 얼마인가요?", o: ["6", "7", "8", "9"], a: 2 },
+    { q: "비례식 2:5 = x:20 에서 x의 값은 얼마인가요?", o: ["6", "7", "8", "9"], a: 2 },
+    { q: "비례식에서 바깥쪽에 있는 두 항을 무엇이라 하나요?", o: ["내항", "외항", "전항", "후항"], a: 1 },
+    { q: "비례식에서 안쪽에 있는 두 항을 무엇이라 하나요?", o: ["내항", "외항", "전항", "후항"], a: 0 },
+    { q: "전체 12를 3:1로 비례배분하면 큰 쪽의 값은 얼마인가요?", o: ["3", "6", "9", "12"], a: 2 },
+    { q: "전체 20을 2:3으로 비례배분하면 작은 쪽의 값은 얼마인가요?", o: ["6", "8", "10", "12"], a: 1 },
+    { q: "원주율을 소수로 어림하여 나타낼 때 주로 사용하는 값은 얼마인가요?", o: ["3.0", "3.14", "3.2", "4.0"], a: 1 },
+    { q: "반지름이 5cm인 원의 원주는 몇 cm인가요? (원주율 3.14로 계산)", o: ["15.7", "31.4", "62.8", "78.5"], a: 1 },
+    { q: "반지름이 4cm인 원의 넓이는 몇 cm²인가요? (원주율 3.14로 계산)", o: ["12.56", "25.12", "50.24", "100.48"], a: 2 },
+    { q: "지름이 10cm인 원의 넓이는 몇 cm²인가요? (원주율 3.14로 계산)", o: ["31.4", "62.8", "78.5", "157"], a: 2 },
+    { q: "평평한 두 밑면이 원이고 옆면이 굽은 면인 입체도형은 무엇인가요?", o: ["원뿔", "원기둥", "구", "각기둥"], a: 1 },
+    { q: "밑면이 원이고 옆면이 굽은 면으로 이루어진 뿔 모양의 입체도형은 무엇인가요?", o: ["원기둥", "원뿔", "구", "각뿔"], a: 1 },
+    { q: "공 모양의 입체도형으로 어느 방향에서 보아도 원 모양인 것은 무엇인가요?", o: ["원기둥", "원뿔", "구", "반구"], a: 2 },
+    { q: "원기둥에서 두 밑면과 만나는 굽은 면을 무엇이라 하나요?", o: ["밑면", "옆면", "모선", "높이"], a: 1 },
+    { q: "원뿔에서 꼭짓점과 밑면인 원의 둘레의 한 점을 이은 선분을 무엇이라 하나요?", o: ["높이", "반지름", "모선", "지름"], a: 2 }
+  ],
+  'm1-1': [
+    { q: "다음 중 소수가 아닌 것은 무엇인가요?", o: ["2", "3", "5", "9"], a: 3 },
+    { q: "60을 소인수분해했을 때 소인수가 아닌 것은?", o: ["2", "3", "5", "7"], a: 3 },
+    { q: "두 수 12와 18의 최대공약수는?", o: ["2", "3", "6", "36"], a: 2 },
+    { q: "두 수 8과 12의 최소공배수는?", o: ["4", "12", "24", "48"], a: 2 },
+    { q: "다음 중 양의 정수가 아닌 것은?", o: ["+1", "+5", "0", "10"], a: 2 },
+    { q: "-3의 절댓값은 얼마인가요?", o: ["-3", "0", "3", "1/3"], a: 2 },
+    { q: "다음 중 가장 큰 수는 어떤 것일까요?", o: ["-5", "-2", "0", "1"], a: 3 },
+    { q: "계산 결과가 맞지 않은 것은? (+3) + (-5)", o: ["-2", "+2", "-8", "+8"], a: 0 },
+    { q: "(-2) × (-4)의 올바른 계산 결과는?", o: ["-8", "-6", "+6", "+8"], a: 3 },
+    { q: "(-12) ÷ (+3)의 결과는 얼마인가요?", o: ["-4", "+4", "-9", "+9"], a: 0 },
+    { q: "x = 3일 때, 식 2x + 5의 값은 얼마인가요?", o: ["8", "10", "11", "13"], a: 2 },
+    { q: "문장을 식으로 바르게 나타낸 것은? '한 자루에 500원인 연필 x자루의 가격'", o: ["500 + x", "500 - x", "500x", "500/x"], a: 2 },
+    { q: "다음 중 x에 대한 일차방정식인 것은?", o: ["x + 2", "x^2 - 1 = 0", "2x = 4", "3 = 3"], a: 2 },
+    { q: "일차방정식 x - 3 = 5의 해는 무엇인가요?", o: ["2", "-2", "8", "-8"], a: 2 },
+    { q: "일차방정식 2x = 10의 해는 무엇인가요?", o: ["2", "5", "8", "20"], a: 1 },
+    { q: "좌표평면 위에서 점 (3, -4)는 몇 사분면에 있나요?", o: ["제1사분면", "제2사분면", "제3사분면", "제4사분면"], a: 3 },
+    { q: "y가 x에 정비례하고 x=2일 때 y=6이다. 정비례 관계식은?", o: ["y = 3x", "y = x + 4", "y = 12/x", "y = 2x"], a: 0 },
+    { q: "y가 x에 반비례하고 x=3일 때 y=4이다. 반비례 관계식은?", o: ["y = x + 1", "y = 12x", "y = 12/x", "y = 3x/4"], a: 2 },
+    { q: "점 (-2, 0)은 어느 축 위에 존재하는 점인가요?", o: ["x축", "y축", "원점", "어느 축도 아니다"], a: 0 },
+    { q: "식 3(x - 2)를 올바르게 전개한 것은?", o: ["3x - 2", "3x - 6", "3x + 6", "x - 6"], a: 1 },
+    { q: "두 정수 a, b에 대하여 |a|=3, |b|=5 이고 a>b 일 때 a의 값은?", o: ["3", "-3", "5", "-5"], a: 0 },
+    { q: "다음 중 계산 결과가 가장 작은 것은?", o: ["(-2)^2", "-2^2", "(-1)^3", "1^5"], a: 1 },
+    { q: "일차방정식 3x - 1 = x + 5의 해는?", o: ["1", "2", "3", "4"], a: 2 },
+    { q: "어떤 수 x의 3배에서 4를 뺀 값은 11이다. x의 값은?", o: ["3", "4", "5", "6"], a: 2 },
+    { q: "점 (a, 5)가 y축 위의 점일 때, a의 값은 얼마인가요?", o: ["-5", "0", "5", "알 수 없다"], a: 1 }
+  ],
+  'm1-2': [
+    { q: "다음 중 한 평면이 결정되지 않는 경우는?", o: ["한 직선 위에 있지 않은 세 점", "한 직선과 그 위에 있지 않은 한 점", "만나는 두 직선", "꼬인 위치에 있는 두 직선"], a: 3 },
+    { q: "동일 평면 위에서 두 직선이 만나지도 않고 평행하지도 않은 상태를 공간에서 무엇이라 하나요?", o: ["직교", "일치", "평행", "꼬인 위치"], a: 3 },
+    { q: "두 직선이 만나서 이루는 각 중 서로 마주 보는 각을 무엇이라 하나요?", o: ["동위각", "엇각", "맞꼭지각", "평각"], a: 2 },
+    { q: "평행한 두 직선에서 한 직선의 동위각 크기가 60도이면 다른 동위각의 크기는?", o: ["30도", "60도", "120도", "180도"], a: 1 },
+    { q: "삼각형의 세 내각의 크기의 합은 항상 몇 도인가요?", o: ["90도", "180도", "270도", "360도"], a: 1 },
+    { q: "변의 개수가 5개인 다각형(오각형)의 내각의 총합은 몇 도인가요?", o: ["360도", "540도", "720도", "900도"], a: 1 },
+    { q: "정다각형 중 한 외각의 크기가 60도인 다각형은 정몇각형인가요?", o: ["정삼각형", "정사각형", "정육각형", "정팔각형"], a: 2 },
+    { q: "반지름의 길이가 5cm인 원의 둘레의 길이는 몇 π cm 인가요?", o: ["5π", "10π", "25π", "50π"], a: 1 },
+    { q: "반지름의 길이가 4cm인 원의 넓이는 몇 π cm^2 인가요?", o: ["4π", "8π", "16π", "32π"], a: 2 },
+    { q: "중심각의 크기가 90도이고 반지름이 6cm인 부채꼴의 호의 길이는 몇 π cm 인가요?", o: ["3π", "6π", "9π", "12π"], a: 0 },
+    { q: "다음 중 다면체가 아닌 입체도형은 무엇인가요?", o: ["삼각기둥", "사각뿔", "원기둥", "정육면체"], a: 2 },
+    { q: "다음 중 회전체가 아닌 입체도형은?", o: ["원기둥", "원뿔", "구", "오각기둥"], a: 3 },
+    { q: "모든 면이 합동인 정다각형이고 각 꼭짓점에 모인 면의 개수가 같은 입체도형은?", o: ["정다면체", "각기둥", "각뿔대", "회전체"], a: 0 },
+    { q: "정다면체의 종류는 역사상 딱 몇 가지만 존재하나요?", o: ["3가지", "4가지", "5가지", "6가지"], a: 2 },
+    { q: "밑면의 반지름이 3cm, 높이가 5cm인 원기둥의 부피는 몇 π cm^3 인가요?", o: ["15π", "30π", "45π", "60π"], a: 2 },
+    { q: "반지름의 길이가 3cm인 구의 부피를 구하는 공식 결과는 몇 π cm^3 인가요? (공식: 4/3 * π * r^3)", o: ["12π", "24π", "36π", "48π"], a: 2 },
+    { q: "자료를 수집하여 일정한 간격으로 나눈 구간을 통계에서 무엇이라 하나요?", o: ["계급", "도수", "변량", "중앙값"], a: 0 },
+    { q: "각 계급에 속하는 자료의 개수를 무엇이라고 부르나요?", o: ["계급의 크기", "도수", "상대도수", "평균"], a: 1 },
+    { q: "전체 도수에 대한 각 계급의 도수의 비율을 무엇이라고 하나요?", o: ["누적도수", "상대도수", "백분율", "계급값"], a: 1 },
+    { q: "상대도수의 총합은 자료의 개수와 상관없이 항상 얼마인가요?", o: ["0", "0.5", "1", "100"], a: 2 },
+    { q: "삼각형의 두 내각의 크기가 각각 40도, 70도일 때, 나머지 한 내각의 크기는?", o: ["50도", "60도", "70도", "80도"], a: 2 },
+    { q: "맞꼭지각의 크기는 서로 어떻게 되나요?", o: ["항상 같다", "항상 다르다", "합해서 90도가 된다", "합해서 180도가 된다"], a: 0 },
+    { q: "모든 면이 정삼각형으로 이루어진 정다면체가 아닌 것은?", o: ["정사면체", "정팔면체", "정십이면체", "정이십면체"], a: 2 },
+    { q: "밑면이 가로 3cm, 세로 4cm인 직사각형이고 높이가 5cm인 사각기둥의 부피는?", o: ["20 cm^3", "40 cm^3", "60 cm^3", "80 cm^3"], a: 2 },
+    { q: "변량들의 총합을 전체 변량의 개수로 나눈 값을 무엇이라 하나요?", o: ["최빈값", "중앙값", "평균", "편차"], a: 2 }
+  ]
+};
+
+/* ── 상태 ─────────────────────────────────────────── */
+const chances = {};
+const stats = {};
+Object.keys(CATEGORIES).forEach(function(key){
+  chances[key] = 3;
+  stats[key] = { lastScore: 0, lastHeight: 0, bestHeight: 0 };
+});
+
+let currentCategory = null;
+let pendingCategory = null;
+let selectedQuestions = [];
+let currentQuestionIdx = 0;
+let correctAnswersCount = 0;
+let wrongQuestions = [];
+let reviewQueue = [];
+const CM_PER_FLOOR = 15;
+const FLOOR_PX = 26;
+let builtFloors = 0;
+let answering = false;
+
+/* ── 사운드 ───────────────────────────────────────── */
+let actx=null, muted=false;
+try{ muted = localStorage.getItem("mathtower-mute")==="1"; }catch(e){}
+function ac(){
+  if(!actx){ try{ actx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ actx=null; } }
+  if(actx && actx.state==="suspended"){ try{actx.resume();}catch(e){} }
+  return actx;
+}
+function tone(freq,dur,type,vol,delay,slideTo){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t0=c.currentTime+(delay||0);
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type||"sine"; o.frequency.setValueAtTime(freq,t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),t0+dur);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.14:vol,t0+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0+dur+.03);
+}
+function knock(){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t0=c.currentTime;
+  const len=Math.floor(c.sampleRate*.1), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+  const src=c.createBufferSource(); src.buffer=buf;
+  const f=c.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1100;
+  const g=c.createGain(); g.gain.setValueAtTime(.2,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+.14);
+  src.connect(f).connect(g).connect(c.destination); src.start();
+  const o=c.createOscillator(), og=c.createGain();
+  o.type="sine"; o.frequency.setValueAtTime(180,t0); o.frequency.exponentialRampToValueAtTime(90,t0+.14);
+  og.gain.setValueAtTime(.16,t0); og.gain.exponentialRampToValueAtTime(.0001,t0+.16);
+  o.connect(og).connect(c.destination); o.start(t0); o.stop(t0+.18);
+}
+const sfx = {
+  build(){ knock(); tone(520,.12,"triangle",.09,0.02,660); },
+  right(){ tone(680,.1,"triangle",.11); tone(900,.12,"triangle",.09,null,.07); },
+  wrong(){ tone(190,.22,"sawtooth",.11,0,110); },
+  finish(){ [523,659,784,1046].forEach((f,i)=>tone(f,.32,"triangle",.12,i*.1)); },
+  select(){ tone(560,.05,"triangle",.05); }
+};
+function syncMute(){
+  const b=document.getElementById("muteBtn"); if(!b) return;
+  b.textContent = muted?"🔇":"🔊"; b.setAttribute("data-off", muted?"1":"0");
+}
+document.getElementById("muteBtn").addEventListener("click",()=>{
+  muted=!muted;
+  try{ localStorage.setItem("mathtower-mute", muted?"1":"0"); }catch(e){}
+  syncMute(); if(!muted) sfx.select();
+  toast(muted?"🔇 효과음 꺼짐":"🔊 효과음 켜짐");
+});
+syncMute();
+
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1500);
+}
+
+/* ── 화면 ─────────────────────────────────────────── */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+  const el=document.getElementById(id); if(el) el.classList.add("active");
+  window.scrollTo(0,0);
+}
+
+/* ── 홈 ───────────────────────────────────────────── */
+function buildHomeCards(){
+  const grid=document.getElementById("category-grid");
+  grid.innerHTML="";
+  Object.keys(CATEGORIES).forEach(function(key){
+    const info=CATEGORIES[key];
+    const card=document.createElement("div");
+    card.className="cat";
+    card.style.setProperty("--c", info.color);
+    card.innerHTML =
+      '<h4><span><span class="em">'+info.emoji+'</span> '+info.label+'</span></h4>'+
+      '<div class="st">최근 기록: <b id="last-'+key+'">0 / 20 (0cm)</b></div>'+
+      '<div class="st">최고 높이: <b id="best-'+key+'">0cm</b></div>'+
+      '<div class="ch" id="chance-'+key+'">남은 기회: 3번</div>';
+    const btn=document.createElement("button");
+    btn.id="btn-"+key;
+    btn.className="btn go";
+    btn.style.marginTop="4px";
+    btn.innerText="도전하기 🚀";
+    btn.onclick=function(){ ac(); openExplain(key); };
+    card.appendChild(btn);
+    grid.appendChild(card);
+  });
+}
+function updateHomeDOM(){
+  Object.keys(CATEGORIES).forEach(function(key){
+    const s=stats[key], c=chances[key];
+    const lastEl=document.getElementById("last-"+key);
+    const bestEl=document.getElementById("best-"+key);
+    const chanceEl=document.getElementById("chance-"+key);
+    const btnEl=document.getElementById("btn-"+key);
+    if(!lastEl||!bestEl||!chanceEl||!btnEl) return;
+    lastEl.innerText = s.lastScore+" / 20 ("+s.lastHeight+"cm)";
+    bestEl.innerText = s.bestHeight+"cm";
+    if(c<=0){ chanceEl.innerText="❌ 도전 기회 소진"; chanceEl.className="ch out"; btnEl.disabled=true; }
+    else{ chanceEl.innerText="남은 기회: "+c+"번"; chanceEl.className="ch"; btnEl.disabled=false; }
+  });
+}
+
+/* ── 설명 ─────────────────────────────────────────── */
+function openExplain(catKey){
+  if(chances[catKey]<=0) return;
+  pendingCategory=catKey;
+  const info=CATEGORIES[catKey], exp=EXPLANATIONS[catKey];
+  document.getElementById("explain-title").innerText = info.emoji+" "+info.label+" 안내";
+  document.getElementById("explain-summary").innerText = exp.summary;
+  const ul=document.getElementById("explain-units");
+  ul.innerHTML="";
+  exp.units.forEach(function(u){
+    const li=document.createElement("li");
+    li.innerHTML="<strong>"+u.name+"</strong>"+u.desc;
+    ul.appendChild(li);
+  });
+  showScreen("screen-explain");
+}
+document.getElementById("explainBack").addEventListener("click",goHome);
+document.getElementById("startBtn").addEventListener("click",confirmStart);
+function confirmStart(){ if(!pendingCategory) return; startGame(pendingCategory); }
+
+/* ── 게임 시작 ─────────────────────────────────────── */
+function startGame(catKey){
+  if(chances[catKey]<=0) return;
+  chances[catKey]--;
+  currentCategory=catKey;
+  correctAnswersCount=0;
+  currentQuestionIdx=0;
+  wrongQuestions=[];
+  builtFloors=0;
+  answering=false;
+
+  const pool=questionPool[catKey];
+  const shuffled=pool.slice().sort(function(){ return 0.5-Math.random(); });
+  selectedQuestions=shuffled.slice(0,20);
+
+  document.getElementById("quiz-semester").innerText=CATEGORIES[catKey].label+" 과정";
+  document.getElementById("playTag").innerText=CATEGORIES[catKey].emoji+" "+CATEGORIES[catKey].label;
+
+  buildStage();
+  showScreen("screen-play");
+  loadQuestion();
+}
+
+/* ── 타워 스테이지 ─────────────────────────────────── */
+function buildStage(){
+  const tower=document.getElementById("tower");
+  tower.innerHTML="";
+  for(let i=1;i<=20;i++){
+    const f=document.createElement("div");
+    f.id="floor-"+i;
+    f.className="floor";
+    f.style.bottom=((i-1)*FLOOR_PX)+"px";
+    const w=104+((i*7)%5)*4;
+    f.style.width=w+"px";
+    f.style.marginLeft=((i%3)-1)*3+"px";
+    f.style.zIndex=String(30-i);
+    f.innerHTML='<span class="tape"></span><span class="num">'+i+'</span>';
+    tower.appendChild(f);
+  }
+  const ruler=document.getElementById("ruler");
+  ruler.innerHTML="";
+  for(let i=1;i<=20;i++){
+    const t=document.createElement("i");
+    t.style.bottom=((i-1)*FLOOR_PX+13)+"px";
+    if(i%3===0){
+      t.className="major";
+      const lab=document.createElement("span");
+      lab.style.bottom=((i-1)*FLOOR_PX+13)+"px";
+      lab.textContent=(i*CM_PER_FLOOR)+"cm";
+      ruler.appendChild(lab);
+    }
+    ruler.appendChild(t);
+  }
+  const clouds=document.getElementById("clouds");
+  clouds.innerHTML="";
+  let ch="";
+  for(let i=0;i<7;i++){
+    const y=8+i*12+Math.random()*6, w=52+Math.random()*70, h=14+Math.random()*12, x=Math.random()*72;
+    ch+='<span class="cloud" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%;width:'+w.toFixed(0)+'px;height:'+h.toFixed(0)+'px;animation-duration:'+(18+Math.random()*16).toFixed(0)+'s;animation-delay:-'+(Math.random()*20).toFixed(0)+'s;opacity:'+(0.2+Math.random()*0.4).toFixed(2)+'"></span>';
+  }
+  clouds.innerHTML=ch;
+  const stars=document.getElementById("stars");
+  let sh="";
+  for(let i=0;i<48;i++){
+    sh+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*82).toFixed(1)+'%;animation-delay:-'+(Math.random()*3).toFixed(1)+'s;opacity:'+(0.4+Math.random()*0.6).toFixed(2)+'"></i>';
+  }
+  stars.innerHTML=sh;
+  updateCamera(0);
+  setAltitude(0);
+  document.getElementById("heightVal").textContent="0";
+  document.getElementById("floorTag").textContent="0층 · 0cm";
+}
+
+function updateCamera(built){
+  const stage=document.getElementById("stage");
+  const cam=document.getElementById("camera");
+  const H=stage.clientHeight||320;
+  const target=H*0.56;
+  const ty=Math.max(0, (64+built*FLOOR_PX)-target);
+  cam.style.transform="translateY("+ty.toFixed(1)+"px)";
+}
+function setAltitude(built){
+  const a=Math.min(1, built/20);
+  const stage=document.getElementById("stage");
+  const sun=document.getElementById("sun");
+  const moon=document.getElementById("moon");
+  const stars=document.getElementById("stars");
+  const clouds=document.getElementById("clouds");
+  if(a<0.34){
+    stage.style.background="linear-gradient(180deg,#0b1430 0%,#123059 38%,#1d5b7a 66%,#2b7a6a 84%,#1d4a3e 100%)";
+  }else if(a<0.68){
+    stage.style.background="linear-gradient(180deg,#0a1330 0%,#173a68 34%,#2a6f9a 62%,#6aa7c7 82%,#8ec6d9 100%)";
+  }else if(a<0.9){
+    stage.style.background="linear-gradient(180deg,#05081a 0%,#0b1636 34%,#1b3566 58%,#3c5f96 80%,#7f86a8 100%)";
+  }else{
+    stage.style.background="radial-gradient(120% 70% at 50% 100%,#122a4a 0%,#080d1e 46%,#02030a 100%)";
+  }
+  sun.style.opacity = String(Math.max(0, 0.9 - a*1.5));
+  sun.style.transform = "translateY("+(a*30).toFixed(0)+"px)";
+  moon.style.opacity = a>0.34 ? String(Math.min(1,(a-0.34)*2.4)) : "0";
+  moon.style.transform = "translateY("+((1-Math.min(1,(a-0.3)*2))* -10).toFixed(0)+"px)";
+  stars.style.opacity = a<0.42 ? "0" : String(Math.min(1,(a-0.42)*2.4));
+  clouds.style.opacity = String(Math.max(0, 1-a*1.35));
+}
+
+function addFloor(idx){
+  const f=document.getElementById("floor-"+idx);
+  if(!f) return;
+  f.classList.remove("done");
+  f.classList.add("show");
+  f.classList.add("glow");
+  setTimeout(function(){ f.classList.remove("glow"); },900);
+  builtFloors=idx;
+  updateCamera(idx);
+  setAltitude(idx);
+  animateHeight(idx*CM_PER_FLOOR);
+  document.getElementById("floorTag").textContent = idx+"층 · "+(idx*CM_PER_FLOOR)+"cm";
+}
+let heightRaf=null;
+function animateHeight(target){
+  const el=document.getElementById("heightVal");
+  const from=parseInt(el.textContent,10)||0;
+  const t0=performance.now(), dur=520;
+  if(heightRaf) cancelAnimationFrame(heightRaf);
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur);
+    const eased=1-Math.pow(1-p,3);
+    el.textContent=String(Math.round(from+(target-from)*eased));
+    if(p<1) heightRaf=requestAnimationFrame(step);
+  }
+  heightRaf=requestAnimationFrame(step);
+}
+
+function boom(text){
+  const b=document.getElementById("boom");
+  if(!b) return;
+  b.innerHTML='<span class="ring"></span><span class="flytext">'+text+'</span>';
+  b.classList.remove("go"); void b.offsetWidth; b.classList.add("go");
+  setTimeout(function(){ b.innerHTML=""; b.classList.remove("go"); },1000);
+}
+
+/* ── 문제 ─────────────────────────────────────────── */
+function loadQuestion(){
+  if(currentQuestionIdx>=20){ endGame(); return; }
+  answering=false;
+  document.getElementById("quiz-progress").innerText=(currentQuestionIdx+1)+" / 20";
+  document.getElementById("qbar").style.width=((currentQuestionIdx)/20*100)+"%";
+  const qData=selectedQuestions[currentQuestionIdx];
+  document.getElementById("question-box").innerText=(currentQuestionIdx+1)+". "+qData.q;
+  const box=document.getElementById("options-box");
+  box.innerHTML="";
+  qData.o.forEach(function(opt,idx){
+    const btn=document.createElement("button");
+    btn.className="opt";
+    btn.innerHTML='<span class="n">'+(idx+1)+'</span><span>'+opt+'</span>';
+    btn.onclick=function(){ checkAnswer(idx,btn); };
+    box.appendChild(btn);
+  });
+  document.getElementById("qfx").textContent="";
+  document.getElementById("qfx").className="qfx";
+}
+
+function checkAnswer(selectedIdx, btnEl){
+  if(answering) return;
+  answering=true;
+  ac();
+  const qData=selectedQuestions[currentQuestionIdx];
+  const btns=document.querySelectorAll("#options-box .opt");
+  btns.forEach(function(b){ b.disabled=true; });
+
+  if(selectedIdx===qData.a){
+    if(btnEl) btnEl.classList.add("ok");
+    correctAnswersCount++;
+    sfx.right();
+    addFloor(correctAnswersCount);
+    setTimeout(sfx.build,120);
+    document.getElementById("qfx").className="qfx ok";
+    document.getElementById("qfx").textContent="⭕ 정답! +15cm · "+((correctAnswersCount)*CM_PER_FLOOR)+"cm";
+    if(correctAnswersCount===20) setTimeout(function(){ boom("🏙️ 300cm 완성!"); },420);
+    else if(correctAnswersCount%5===0) setTimeout(function(){ boom((correctAnswersCount*CM_PER_FLOOR)+"cm 돌파!"); },420);
+    document.getElementById("qbar").style.width=((currentQuestionIdx+1)/20*100)+"%";
+    setTimeout(function(){
+      currentQuestionIdx++;
+      if(currentQuestionIdx>=20) endGame(); else loadQuestion();
+    },880);
+  }else{
+    if(btnEl) btnEl.classList.add("no");
+    if(btns[qData.a]) btns[qData.a].classList.add("ok");
+    wrongQuestions.push({ q:qData.q, o:qData.o, a:qData.a });
+    sfx.wrong();
+    document.getElementById("qfx").className="qfx no";
+    document.getElementById("qfx").textContent="❌ 아쉬워요! 정답은 "+(qData.a+1)+") "+qData.o[qData.a]+" — 오답노트에 기록했어요";
+    document.getElementById("qbar").style.width=((currentQuestionIdx+1)/20*100)+"%";
+    setTimeout(function(){
+      currentQuestionIdx++;
+      if(currentQuestionIdx>=20) endGame(); else loadQuestion();
+    },1350);
+  }
+}
+
+/* ── 결과 ─────────────────────────────────────────── */
+function endGame(){
+  const earnedHeight=correctAnswersCount*CM_PER_FLOOR;
+  const s=stats[currentCategory];
+  s.lastScore=correctAnswersCount;
+  s.lastHeight=earnedHeight;
+  if(earnedHeight>s.bestHeight) s.bestHeight=earnedHeight;
+
+  document.getElementById("result-score").innerText=correctAnswersCount;
+  document.getElementById("height-result").innerText=earnedHeight;
+  document.getElementById("rs-score").innerText=correctAnswersCount+" / 20";
+  document.getElementById("rs-floor").innerText=correctAnswersCount+"층";
+  document.getElementById("rs-best").innerText=s.bestHeight+"cm";
+
+  let praiseMsg="";
+  if(correctAnswersCount===20){
+    praiseMsg="🎉 대단합니다! 당신은 모든 타워를 끝까지 쌓아올린 진정한 수학 마스터! 완벽합니다! ⭐⭐⭐";
+  }else if(correctAnswersCount>=15){
+    praiseMsg="😄 정말 훌륭해요! 수학적 센스가 대단하네요. 조금만 더 하면 완벽한 마스터가 될 수 있어요! 화이팅!";
+  }else if(correctAnswersCount>=10){
+    praiseMsg="👍 절반 이상 성공! 기본기가 탄탄하군요. 다음 판에는 더 높은 고층 빌딩을 지어봐요! 화이팅! 🔥";
+  }else{
+    praiseMsg="🌿 아쉬운 점수가 나왔지만 실망하지 마세요! 개념을 조금만 검토하면 훨씬 잘할 수 있어요. 화이팅! 할 수 있습니다!";
+  }
+  document.getElementById("result-praise").innerText=praiseMsg;
+
+  reviewQueue=wrongQuestions.slice();
+  const noticeEl=document.getElementById("result-review-notice");
+  const reviewBtn=document.getElementById("btn-result-review");
+  const homeBtn=document.getElementById("btn-result-home");
+  if(reviewQueue.length>0){
+    noticeEl.innerText="✏️ 틀린 문제가 "+reviewQueue.length+"개 있어요! 오답을 모두 다시 풀어야 홈으로 돌아갈 수 있어요.";
+    noticeEl.style.display="block";
+    reviewBtn.style.display="block";
+    homeBtn.style.display="none";
+  }else{
+    noticeEl.style.display="none";
+    reviewBtn.style.display="none";
+    homeBtn.style.display="block";
+  }
+  sfx.finish();
+  showScreen("screen-result");
+}
+document.getElementById("btn-result-review").addEventListener("click",startReview);
+document.getElementById("btn-result-home").addEventListener("click",goHome);
+
+/* ── 오답노트 ─────────────────────────────────────── */
+function startReview(){
+  document.getElementById("review-complete").style.display="none";
+  document.getElementById("review-question").style.display="block";
+  document.getElementById("review-options").style.display="grid";
+  showScreen("screen-review");
+  loadReviewQuestion();
+}
+function loadReviewQuestion(){
+  if(reviewQueue.length===0){
+    document.getElementById("review-question").style.display="none";
+    document.getElementById("review-options").style.display="none";
+    document.getElementById("review-progress").innerText="남은 문제: 0개";
+    document.getElementById("review-feedback").innerText="";
+    document.getElementById("review-complete").style.display="block";
+    return;
+  }
+  document.getElementById("review-progress").innerText="남은 문제: "+reviewQueue.length+"개";
+  const fb=document.getElementById("review-feedback");
+  fb.innerText=""; fb.style.color="";
+  const qData=reviewQueue[0];
+  document.getElementById("review-question").innerText=qData.q;
+  const box=document.getElementById("review-options");
+  box.innerHTML="";
+  qData.o.forEach(function(opt,idx){
+    const btn=document.createElement("button");
+    btn.className="opt";
+    btn.innerHTML='<span class="n">'+(idx+1)+'</span><span>'+opt+'</span>';
+    btn.onclick=function(){ checkReviewAnswer(idx,btn); };
+    box.appendChild(btn);
+  });
+}
+function checkReviewAnswer(selectedIdx, btnEl){
+  const qData=reviewQueue[0];
+  const fb=document.getElementById("review-feedback");
+  const btns=document.querySelectorAll("#review-options .opt");
+  btns.forEach(function(b){ b.disabled=true; });
+  if(selectedIdx===qData.a){
+    if(btnEl) btnEl.classList.add("ok");
+    fb.innerText="✅ 정답이에요!"; fb.style.color="#3ddc97";
+    sfx.right();
+    reviewQueue.shift();
+  }else{
+    if(btnEl) btnEl.classList.add("no");
+    if(btns[qData.a]) btns[qData.a].classList.add("ok");
+    fb.innerText="❌ 틀렸어요. 이 문제는 조금 뒤에 다시 나와요.";
+    fb.style.color="#ff6b81";
+    sfx.wrong();
+    const wrongOne=reviewQueue.shift();
+    reviewQueue.push(wrongOne);
+  }
+  setTimeout(loadReviewQuestion,820);
+}
+document.getElementById("reviewHome").addEventListener("click",finishReview);
+function finishReview(){ goHome(); }
+
+/* ── 홈으로 ───────────────────────────────────────── */
+function goHome(){
+  pendingCategory=null;
+  updateHomeDOM();
+  showScreen("screen-home");
+}
+document.getElementById("playHome").addEventListener("click",function(){
+  if(currentQuestionIdx<20 && correctAnswersCount>0){ toast("여기까지 쌓은 "+correctAnswersCount+"층("+(correctAnswersCount*CM_PER_FLOOR)+"cm)은 기록에 남아요"); }
+  goHome();
+});
+
+/* ── 시작 ─────────────────────────────────────────── */
+buildHomeCards();
+updateHomeDOM();
+window.addEventListener("resize",function(){ if(document.getElementById("screen-play").classList.contains("active")) updateCamera(builtFloors); });
+</script>
+</body>
+</html>
