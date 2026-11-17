@@ -21,7 +21,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX = os.path.join(ROOT, "index.html")
 SRC_DIR = os.path.join(ROOT, "hub-build", "src")
 
-GAMES = ["codex", "math", "history", "mathtower", "elements"]
+GAMES = ["codex", "math", "history", "mathtower", "elements", "infcard"]
 
 
 def load_sources():
