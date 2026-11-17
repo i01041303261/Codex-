@@ -1181,8 +1181,9 @@ function newBattle(cfg){
     foes:[], log:[], fx:[], shake:0, flash:0, speed:1, autoT:0, cardsUsedThisTurn:{},
     enemyDeck:cfg.enemyDeck?cfg.enemyDeck.slice():null, enemy:{hp:cfg.enemyHp||100,maxhp:cfg.enemyHp||100,block:0,gems:[],hand:[],deck:[],pile:[],atk:cfg.enemyAtk||8},
     arena:cfg.arena||false, intro:1.2, poison:[], cheat:0};
-  // 내 덱
+  // 내 덱 (튜토리얼은 어떤 스타터로도 이길 수 있게 공격 카드 1장 보장)
   B.deck=shuffle(deckCards().map(c=>c.id));
+  if(cfg.tut&&!B.deck.some(id=>['c_slime','c_farmer','c_thiefcat','ignis','r_spear'].includes(id)))B.deck.unshift('c_slime');
   // 적
   B.foes=cfg.foes.map(f=>{
     const d=FOE_DATA[f.kind];
