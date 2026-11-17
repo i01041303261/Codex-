@@ -1471,7 +1471,7 @@ function renderGems(){
       // 자동 매칭: 조건이 맞는 카드 찾아 강조
       renderHand();
       renderGems();
-      if(typeof TUT!=='undefined'&&TUT.active&&TUT.steps[TUT.step]&&TUT.steps[TUT.step].c==='gem')tutNext();
+      if(typeof TUT!=='undefined'&&TUT.active){const st=TUT.steps[TUT.step]; if(st&&(!st.c||st.c==='gem'))tutNext();}
     };
   });
 }
