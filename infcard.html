@@ -1194,7 +1194,8 @@ function newBattle(cfg){
   startTurn(true);
 }
 function startTurn(first){
-  B.turn++;
+  if(!first)B.turn++;
+  else B.turn=1;
   // 내 독 틱
   if(B.player.poisT>0){
     B.player.hp=Math.max(0,B.player.hp-B.player.pois);
@@ -1477,8 +1478,7 @@ function renderGems(){
 function renderHand(){
   const el=$('handEl');
   const selN=B.sel.length;
-  const readyIds=cardsReady().map(c=>c.id);
-  const readySet={}; readyIds.forEach(id=>readySet[id]=1);
+  const readySet={}; cardsReady().forEach(id=>readySet[id]=1);
   el.innerHTML=B.hand.map((id,i)=>{
     const c=CARD_BY[id]; if(!c)return'';
     const cp=cardPower(c);
