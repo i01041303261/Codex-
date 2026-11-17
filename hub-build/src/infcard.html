@@ -881,10 +881,11 @@ function monsterSprite(kind, size){
   const key=kind+'_'+size;
   if(spriteCache[key])return spriteCache[key];
   const art=MON_ART[FOE_DATA[kind].art]||MON_ART.slime;
+  const base = art._parsed || (art._parsed = parseArt(art[0], art[1]));
   const c=mk(size,size), g=c.getContext('2d');
   g.imageSmoothingEnabled=false;
   const s=size/16;
-  g.drawImage(art[0],1,0,18,16, 0, size*0.08, size, size*0.84);
+  g.drawImage(base,0,0,18,16, 0, size*0.08, size, size*0.84);
   // 색조 덧칠
   g.globalCompositeOperation='source-atop';
   g.fillStyle=hexA(FOE_DATA[kind].col,.18); g.fillRect(0,0,size,size);
