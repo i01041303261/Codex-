@@ -479,10 +479,10 @@ canvas{display:block}
 .gcard .gback canvas{width:100%;height:100%;display:block}
 .gcard .gback i{display:none}
 .gcard .gface canvas{width:100%;height:100%;display:block}
-.gcard .gglow{position:absolute;inset:-6px;border-radius:16px;pointer-events:none;opacity:0;transition:opacity .4s;
-  box-shadow:0 0 26px var(--gc,#fff),0 0 60px var(--gc,#fff);z-index:-1}
-.gcard.flipped .gglow{opacity:.85}
-.gcard.flipped .gfront{box-shadow:0 0 26px var(--gc,#fff),0 0 60px var(--gc,#fff)}
+.gcard .gglow{position:absolute;inset:-4px;border-radius:15px;pointer-events:none;opacity:0;transition:opacity .4s;
+  box-shadow:0 0 14px var(--gc,#fff);z-index:-1}
+.gcard.flipped .gglow{opacity:.5}
+.gcard.flipped .gfront{box-shadow:0 0 16px var(--gc,#fff)}
 .gcard.legend .gfront,.gcard.myth .gfront{animation:legendShake .5s .35s}
 @keyframes legendShake{0%,100%{transform:rotateY(180deg)}30%{transform:rotateY(180deg) translateX(-4px)}60%{transform:rotateY(180deg) translateX(4px)}}
 .gcard .gnew{position:absolute;left:4px;bottom:4px;font-size:8.5px;font-weight:900;background:linear-gradient(180deg,#ff7a9a,#e01f45);
@@ -3154,12 +3154,12 @@ function dealDmg(foe, amount, opts) {
   if (!opts.pierce && foe.block > 0) {
     absorbed = Math.min(foe.block, dmg);
     foe.block -= absorbed; dmg -= absorbed;
-    if (absorbed > 0) addPop(foe.x + foe.h * .18, foe.y - foe.h * .78, '🛡' + absorbed, '#7fd4ff', .9);
+    if (absorbed > 0) addPop(foe.x + foe.h * .2, foe.y - foe.h * .42, '🛡' + absorbed, '#7fd4ff', .9);
   }
   foe.hp = Math.max(0, foe.hp - dmg);
   foe.flash = 1; foe.knock = 1;
-  addPop(foe.x, foe.y - foe.h * .74, '-' + dmg, crit ? '#ffe9a8' : '#ff8090', crit ? 1.6 : 1, crit);
-  if (crit) { addPop(foe.x, foe.y - foe.h * .9, 'CRITICAL!', '#ffd54a', 1.15, true); flash('#ffd9a0', .5); shake(12); SFX.crit(); }
+  addPop(foe.x + foe.h * .2, foe.y - foe.h * .2, '-' + dmg, crit ? '#ffe9a8' : '#ff8090', crit ? 1.4 : 1, crit);
+  if (crit) { flash('#ffd9a0', .5); shake(12); SFX.crit(); }
   else { shake(3 + Math.min(7, dmg * .18)); SFX.hit(); }
   flash('#ff5a6e', .14);
   if (foe.hp <= 0 && !foe.dying) {
@@ -3210,6 +3210,7 @@ function useCardAt(i) {
   renderGems(); renderHand(); updateHud();
   if (typeof TUT !== 'undefined' && TUT.active) tutHook('card');
   if (!B || B.phase !== 'play') return;
+  if (!aliveFoes().length) { setTimeout(() => { if (B && B.phase !== 'end') win(); }, T(650)); return; }
   if (!B.hand.length) setTimeout(() => { if (B && B.phase === 'play') endTurn(); }, T(700));
   else if (B.gems.every((g, k) => B.usedGems[k])) setTimeout(() => { if (B && B.phase === 'play') endTurn(); }, T(650));
 }
@@ -3259,7 +3260,6 @@ function resolveCard(c) {
         setTimeout(() => {
           if (!B || f.hp <= 0) return;
           elementFX(el, f.x, f.y - f.h * .4);
-          addPop(f.x, f.y - f.h * .75, c.name, '#ffe9a8', .8);
           dealDmg(f, c.val);
         }, T(k * 130));
       });
@@ -3298,7 +3298,7 @@ function resolveCard(c) {
         addPop(t0.x, t0.y - t0.h * .8, 'STUN', '#bfeaff', 1.1);
         addParts(t0.x, t0.y - t0.h * .5, '#bfeaff', 18, 'shard');
         SFX.stun();
-        if (t0.hp > 0) { t0.pendingAct = null; logMsg(t0.name + ' 행동 지연'); }
+        if (t0.hp > 0) { t0.pendingAct = null; t0.stunned = 1; logMsg(t0.name + ' 행동 불가'); }
       }
       break;
     }
@@ -3370,6 +3370,14 @@ function endTurn() {
     if (idx >= list.length) { finishEnemy(); return; }
     const f = list[idx++];
     if (f.hp <= 0) { step(); return; }
+    if (f.stunned) {
+      f.stunned = 0; f.pendingAct = null;
+      addPop(f.x, f.y - f.h * .5, '기절', '#bfeaff', 1.05);
+      addParts(f.x, f.y - f.h * .4, '#bfeaff', 10, 'shard');
+      SFX.stun();
+      setTimeout(step, T(420));
+      return;
+    }
     foeAct(f, () => setTimeout(step, T(300)));
   };
   setTimeout(step, T(420));
@@ -3461,13 +3469,13 @@ function lose() {
   if (B.cfg.arena) { S.arenaLoses++; S.arenaPts = Math.max(0, S.arenaPts - Math.round((B.cfg.pts || 20) / 2)); save(); }
   setTimeout(() => {
     if (tut) {
-      const m = modal('<h2>💀 패배…</h2><p class="center">괜찮아, 다시 한 번!<br>카드의 <b>조건 배지</b>와 젬 색·숫자를 확인하자.</p>' +
+      const m = modal('<h2>패배…</h2><p class="center">괜찮아, 다시 한 번!<br>카드의 <b>조건 배지</b>와 젬 색·숫자를 확인하자.</p>' +
         '<div class="mbtns"><button class="btn primary" id="rTut">다시 도전</button><button class="btn ghost" id="rSkip">스타터팩 받기</button></div>', { lock: 1 });
       m.querySelector('#rTut').onclick = () => { closeModal(); B = null; stopBattleLoop(); startTutorial(); };
       m.querySelector('#rSkip').onclick = () => { closeModal(); B = null; stopBattleLoop(); endTutorial(); };
       return;
     }
-    const m = modal('<h2>💀 패배</h2><p class="center">' + esc(title) + '<br>카드의 힘이 약했다. 덱을 다듬고 다시 도전하자.</p>' +
+    const m = modal('<div class="kicker" style="text-align:center">DEFEAT</div><h2>패배</h2><p class="center">' + esc(title) + '<br>카드의 힘이 약했다. 덱을 다듬고 다시 도전하자.</p>' +
       '<div class="mbtns"><button class="btn primary" data-close>로비로</button></div>', {});
     m.querySelector('[data-close]').onclick = () => { closeModal(); B = null; stopBattleLoop(); enterLobby(); };
   }, T(700));
@@ -3492,7 +3500,7 @@ function rewardCard(minOrder) {
   return { id, isNew };
 }
 function showWinModal(gold, shards, got, cfg) {
-  let html = '<h2>🏆 승리!</h2><p class="center">' + esc(cfg.title) + ' 클리어</p>' +
+  let html = '<div class="kicker" style="text-align:center">VICTORY</div><h2>승리!</h2><p class="center">' + esc(cfg.title) + ' 클리어</p>' +
     '<div class="sum-reward"><span class="gold-txt">🪙 +' + fmt(gold) + '</span><span style="color:#8fd8ff">💎 +' + fmt(shards) + '</span>' + (cfg.arena ? '<span>🏆 +' + (cfg.pts || 20) + 'pt</span>' : '') + '</div>';
   if (got && got.length) {
     html += '<p class="center tiny muted">보스 보상 카드</p><div class="sum-list" id="winCards"></div>';
@@ -3768,7 +3776,7 @@ function drawBattle(t) {
     g.restore();
     if (dead) return;
     // 이름 + HP 바
-    const maxW = B.foes.length >= 3 ? W * .21 : B.foes.length === 2 ? W * .26 : W * .4;
+    const maxW = B.foes.length >= 3 ? W * .2 : B.foes.length === 2 ? W * .23 : W * .38;
     const bw = Math.max(44, Math.min(f.h * .72, maxW)), bx = f.x + lunge - bw / 2, by = f.y - f.h * (f.top + .14) + (i % 2 ? 4 : 0);
     g.save();
     g.fillStyle = 'rgba(3,2,8,.62)'; rr(g, bx - 5, by - 4, bw + 10, 25, 7); g.fill();
@@ -3786,7 +3794,7 @@ function drawBattle(t) {
     if (f.pendingAct) {
       const isAtk = f.pendingAct === 'dmg' || f.pendingAct === 'dmgall';
       const label = isAtk ? '⚔ 공격' : f.pendingAct === 'block' ? '🛡 방어' : '☠ 독';
-      const ty = by - 16;
+      const ty = by - 27;
       g.font = '900 ' + Math.max(8.5, H * .022) + 'px ' + FONT;
       const tw = g.measureText(label).width + 14;
       g.fillStyle = isAtk ? 'rgba(120,10,24,.9)' : 'rgba(10,40,70,.9)';
@@ -3882,7 +3890,7 @@ function drawBattle(t) {
   B.pops = B.pops.filter(p => now - p.t0 < p.life);
   B.pops.forEach(p => {
     const k = (now - p.t0) / p.life;
-    const y = p.y - easeOut(clamp(k, 0, 1)) * B.vh * .13;
+    const y = p.y - easeOut(clamp(k, 0, 1)) * B.vh * .06;
     const x = p.x + p.drift * k;
     const sc = k < .18 ? lerp(1.7, 1, k / .18) : 1;
     const a = k > .72 ? 1 - (k - .72) / .28 : 1;
@@ -3893,6 +3901,13 @@ function drawBattle(t) {
     g.strokeStyle = 'rgba(0,0,0,.9)'; g.lineWidth = 4.5;
     g.strokeText(p.text, 0, 0);
     g.fillStyle = p.col; g.fillText(p.text, 0, 0);
+    if (p.crit) {
+      g.font = '900 ' + Math.round(Math.max(8, B.vh * .019) * p.size) + 'px ' + FONT;
+      g.strokeStyle = 'rgba(0,0,0,.9)'; g.lineWidth = 3;
+      g.strokeText('CRITICAL', 0, -Math.round(Math.max(14, B.vh * .036) * p.size));
+      g.fillStyle = '#ffd54a';
+      g.fillText('CRITICAL', 0, -Math.round(Math.max(14, B.vh * .036) * p.size));
+    }
     if (p.crit) { g.fillStyle = '#fff'; g.globalAlpha = a * .5; g.fillText(p.text, 0, -1); }
     g.restore();
   });
@@ -4083,9 +4098,13 @@ function drawCine(now) {
     const bw = Math.min(W * .16, 96) * grow;
     const pillar = g.createLinearGradient(cx - bw * 2.4, 0, cx + bw * 2.4, 0);
     pillar.addColorStop(0, hexA(aura, 0));
-    pillar.addColorStop(.34, hexA(aura, .35 * fade));
-    pillar.addColorStop(.5, hexA('#ffffff', .92 * fade));
-    pillar.addColorStop(.66, hexA(aura, .35 * fade));
+    pillar.addColorStop(.22, hexA(aura, .10 * fade));
+    pillar.addColorStop(.36, hexA(aura, .30 * fade));
+    pillar.addColorStop(.45, hexA(aura, .55 * fade));
+    pillar.addColorStop(.5, hexA('#ffffff', .95 * fade));
+    pillar.addColorStop(.55, hexA(aura, .55 * fade));
+    pillar.addColorStop(.64, hexA(aura, .30 * fade));
+    pillar.addColorStop(.78, hexA(aura, .10 * fade));
     pillar.addColorStop(1, hexA(aura, 0));
     g.fillStyle = pillar;
     g.fillRect(cx - bw * 2.4, 0, bw * 4.8, H);
@@ -4209,7 +4228,7 @@ function cineRevealStage() {
     const d = document.createElement('div');
     d.className = 'gcard' + (R.order >= 3 ? ' legend' : '') + (R.order >= 4 ? ' myth' : '');
     d.dataset.i = i;
-    d.style.setProperty('--gc', R.aura || R.color);
+    d.style.setProperty('--gc', R.color);
     d.style.animation = 'cardUp .4s ' + (i * .05) + 's backwards';
     const back = document.createElement('div'); back.className = 'gface gback';
     const bcv = document.createElement('canvas'); bcv.width = 220; bcv.height = 300;
@@ -4278,7 +4297,7 @@ function cineSummaryStage() {
   if (dupShard > 0 || rw) save();
   let html = '<div class="cin-stage" style="gap:8px">' +
     '<div class="cin-summary">' +
-    '<div class="sum-head"><h3>' + (Gacha.opts.mode === 'pack' ? '🎁 스타터팩 개봉' : '✨ 소환 결과') + '</h3><span>' + Gacha.n + '장 · NEW ' + newCount + '</span></div>' +
+    '<div class="sum-head"><h3>' + (Gacha.opts.mode === 'pack' ? '스타터팩 개봉' : '소환 결과') + '</h3><span>' + Gacha.n + '장 · NEW ' + newCount + '</span></div>' +
     '<div class="sum-totals">' + RARITY_ORDER.slice().reverse().filter(r => counts[r] > 0).map(r =>
       '<span class="sum-total" style="color:' + RARITY[r].color + ';border-color:' + hexA(RARITY[r].color, .45) + '">' + r + ' ×' + counts[r] + '</span>').join('') + '</div>' +
     (rewardHtml ? '<div class="sum-reward">' + rewardHtml + '</div>' : '') +
@@ -4292,7 +4311,7 @@ function cineSummaryStage() {
     '<div class="cin-actions">' +
     (Gacha.opts.mode === 'pack' ? '<button class="btn gold lg" id="cineDone">모험 시작하기</button>' :
       '<button class="btn primary lg" id="cineDone">확인</button>' +
-      '<button class="btn ghost" id="cineAgain">한 번 더</button>') +
+      '<button class="btn ghost" id="cineAgain">한 번 더 · 🪙 ' + (Gacha.n === 10 ? '1,350' : '150') + '</button>') +
     '</div></div>';
   $('cinUi').innerHTML = html;
   if (dupShard > 0) SFX.coin();
@@ -4371,7 +4390,9 @@ function gachaPullShard() {
 
 /* ── 스타터팩 (온보딩) ── */
 function giveStarterPack() {
-  const m = modal('<div class="pack-scene"><h2>🎁 스타터팩</h2><p class="center">무한의 군주가 떨어뜨린 첫 가방이 열린다…</p>' +
+  if (typeof TUT !== 'undefined') { TUT.active = false; TUT.clearTimer && TUT.clearTimer(); }
+  const gb = document.getElementById('guideBox'); if (gb) gb.innerHTML = '';
+  const m = modal('<div class="pack-scene"><h2>스타터팩</h2><p class="center">무한의 군주가 떨어뜨린 첫 가방이 열린다…</p>' +
     '<div class="pack" id="packEl"><div class="seal">🃏</div><div class="pname">STARTER PACK</div></div>' +
     '<p class="center tiny muted">탭해서 개봉</p></div>', { lock: 1 });
   SFX.pack();
