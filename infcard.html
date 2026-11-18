@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>무한의 군주 — 카드 RPG</title>
-<meta name="description" content="무한의 군주: 차원 소환 연출과 젬 조합 전투로 싸우는 다크 판타지 카드 RPG. 30챕터 × 30스테이지, 카드 소환·덱 편성·강화·도감·아레나.">
+<meta name="description" content="무한의 군주: 마나 코스트·약점 브레이크·속성 콤보로 싸우는 다크 판타지 카드 RPG. 30챕터 × 30스테이지, 카드 소환·덱 편성·강화·도감·아레나.">
 <meta name="theme-color" content="#08050f">
 <style>
 /* ════════════════ 0 · 기반 ════════════════ */
@@ -390,6 +390,76 @@ canvas{display:block}
 .tut-skip{position:absolute;right:8px;top:8px;z-index:10;font-size:10.5px;padding:5px 9px;border-radius:8px;
   background:rgba(4,2,10,.7);border:1px solid rgba(255,255,255,.16);color:#cbb8e8;backdrop-filter:blur(4px)}
 
+/* ════════════════ 5-B · v3 전투 UI (마나 · EX · 체인 · 브레이크) ════════════════ */
+.b-mana{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center}
+.b-mana .orbs{display:flex;align-items:center;justify-content:center;gap:3px;flex-wrap:nowrap}
+.b-mana .orb{display:block;width:clamp(11px,3.2vw,17px);height:clamp(14px,4vw,21px);
+  background:linear-gradient(180deg,rgba(90,130,180,.22),rgba(24,34,60,.4));border:1px solid rgba(140,190,255,.22);
+  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);transition:background .25s,box-shadow .25s,transform .25s}
+.b-mana .orb.on{background:linear-gradient(180deg,#d8f6ff,#5ab8ff 55%,#2a6fd0);border-color:#e6f7ff;
+  box-shadow:0 0 9px rgba(90,190,255,.85);transform:scale(1.04)}
+.b-mana .orb.bonus.on{background:linear-gradient(180deg,#fff6d8,#ffc44d 55%,#c08a20);border-color:#fff8e0;
+  box-shadow:0 0 10px rgba(255,200,90,.9)}
+.b-mana .mnum{font-size:9px;font-weight:800;color:#a8d8ff;letter-spacing:.2px;line-height:1}
+.b-mana .mnum b{font-size:12px;color:#fff;font-weight:900}
+.b-mana .mnum span{opacity:.6}
+.exbtn{position:relative;width:50px;height:50px;flex:0 0 auto;border-radius:50%;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f5c96a;
+  border:2px solid rgba(245,201,106,.32);box-shadow:inset 0 0 14px rgba(0,0,0,.7);transition:border-color .2s}
+.exbtn::before{content:"";position:absolute;inset:0;border-radius:50%;z-index:0;
+  background:conic-gradient(from -90deg,#ffe9a8 var(--od,0%),rgba(255,255,255,.05) 0)}
+.exbtn::after{content:"";position:absolute;inset:4px;border-radius:50%;z-index:1;
+  background:radial-gradient(circle at 50% 38%,#2c1844,#0b0616 78%)}
+.exbtn .exlabel,.exbtn .expct{position:relative;z-index:2;line-height:1.05}
+.exbtn .exlabel{font-size:14px;font-weight:900;letter-spacing:1px}
+.exbtn .expct{font-size:8px;font-weight:800;opacity:.75}
+.exbtn.ready{border-color:#fff6d8;color:#fff;animation:exReady 1.15s ease-in-out infinite}
+@keyframes exReady{0%,100%{box-shadow:0 0 12px rgba(255,220,120,.45),inset 0 0 14px rgba(0,0,0,.7)}50%{box-shadow:0 0 30px rgba(255,225,140,.95),inset 0 0 14px rgba(0,0,0,.7)}}
+.b-portrait .odring{position:absolute;inset:-7px;width:calc(100% + 14px);height:calc(100% + 14px);transform:rotate(-90deg);overflow:visible}
+.b-portrait .odring circle{fill:none;stroke-width:2.6;stroke-linecap:round;transition:stroke-dashoffset .3s,stroke .3s}
+.hcard .hcost{position:absolute;left:2px;top:2px;width:17px;height:17px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#eaf6ff;z-index:3;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,#dff2ff,#3f86d8 62%,#12365f);
+  border:1px solid rgba(220,245,255,.9);box-shadow:0 0 8px rgba(90,180,255,.65)}
+.hcard .hcost.c4,.hcard .hcost.c5{color:#2a1600;background:radial-gradient(circle at 34% 28%,#fff6d8,#e8a93a 62%,#7a4a08);
+  border-color:#fff8e0;box-shadow:0 0 9px rgba(255,200,90,.85)}
+.hcard .helem{position:absolute;right:3px;top:2px;font-size:9.5px;line-height:1;z-index:3;filter:drop-shadow(0 1px 2px #000)}
+.chain-badge{position:absolute;right:9px;top:38px;display:flex;align-items:baseline;gap:3px;padding:2px 8px;border-radius:10px;
+  background:linear-gradient(180deg,rgba(44,22,74,.92),rgba(12,6,22,.92));border:1px solid rgba(245,201,106,.55);
+  color:#ffe9a8;opacity:0;transform:translateX(10px);transition:opacity .2s,transform .2s;pointer-events:none;z-index:5}
+.chain-badge.on{opacity:1;transform:none}
+.chain-badge b{font-size:17px;font-weight:900;line-height:1;color:#fff6d8;text-shadow:0 0 10px rgba(245,201,106,.9)}
+.chain-badge span{font-size:7.5px;letter-spacing:1.4px;font-weight:800}
+.chain-badge.pop{animation:chainPop .38s var(--ease)}
+@keyframes chainPop{0%{transform:scale(1.4)}60%{transform:scale(.95)}100%{transform:scale(1)}}
+.combo-banner{position:absolute;left:50%;top:25%;transform:translate(-50%,-50%);transition:opacity .22s;display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:7px 18px;border-radius:14px;pointer-events:none;z-index:8;opacity:0;white-space:nowrap;
+  background:linear-gradient(180deg,rgba(62,28,94,.94),rgba(16,8,26,.95));border:1px solid var(--line-gold);
+  box-shadow:0 10px 30px rgba(0,0,0,.6),0 0 24px rgba(245,201,106,.3)}
+.combo-banner.on{opacity:1;animation:comboPop .42s var(--ease)}
+.combo-banner b{font-size:clamp(15px,4.4vw,21px);font-weight:900;letter-spacing:2px;color:#fff6d8;text-shadow:0 0 14px rgba(255,200,100,.9)}
+.combo-banner span{font-size:10px;color:#dcccf8}
+@keyframes comboPop{0%{transform:translate(-50%,-50%) scale(.78)}55%{transform:translate(-50%,-50%) scale(1.06)}100%{transform:translate(-50%,-50%) scale(1)}}
+.break-banner{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:9;opacity:0;transition:opacity .2s}
+.break-banner.on{opacity:1;animation:breakPop .5s var(--ease)}
+.break-banner b{display:block;font-size:clamp(30px,10vw,52px);font-weight:900;letter-spacing:3px;font-style:italic;color:#fff3c0;
+  text-shadow:0 0 24px #ffb020,0 0 48px #ff8a00,0 4px 0 #6a3a00;line-height:1.05}
+.break-banner span{font-size:10px;letter-spacing:1.6px;color:#ffe9a8}
+@keyframes breakPop{0%{transform:translate(-50%,-50%) scale(1.7) rotate(-4deg);filter:blur(8px)}
+  55%{transform:translate(-50%,-50%) scale(1) rotate(0);filter:blur(0)}100%{filter:blur(0)}}
+.excut{position:absolute;inset:0;pointer-events:none;z-index:11;opacity:0;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:radial-gradient(circle at 50% 50%,rgba(60,20,0,.55),transparent 62%)}
+.excut.on{animation:exCutIn 2.3s ease forwards}
+.excut .exrays{position:absolute;width:180%;aspect-ratio:1;background:repeating-conic-gradient(from 0deg,rgba(255,225,150,.26) 0deg 5deg,transparent 5deg 15deg);
+  -webkit-mask-image:radial-gradient(circle,#000 18%,transparent 60%);mask-image:radial-gradient(circle,#000 18%,transparent 60%);animation:exSpin 2.6s linear}
+.excut .exword{position:relative;font-size:clamp(24px,8vw,44px);font-weight:900;letter-spacing:5px;font-style:italic;color:#fff6d8;
+  text-shadow:0 0 20px #ffb020,0 0 46px #ff7a00,0 3px 0 #5a2a00}
+.excut .exsub{position:relative;font-size:clamp(10px,3vw,13px);letter-spacing:4px;color:#ffe9a8;font-weight:800}
+@keyframes exSpin{to{transform:rotate(360deg)}}
+@keyframes exCutIn{0%{opacity:0;transform:scale(1.3)}8%{opacity:1;transform:scale(1)}82%{opacity:1}100%{opacity:0;transform:scale(1.04)}}
+#btnAuto{width:auto;min-width:38px;padding:0 8px;font-size:9.5px;font-weight:900;letter-spacing:.4px}
+#btnAuto.on{background:linear-gradient(180deg,rgba(92,224,138,.32),rgba(18,70,44,.65));border-color:rgba(92,224,138,.85);color:#dcffe8}
+
 /* ════════════════ 6 · 모달 / 토스트 ════════════════ */
 #ovl{position:absolute;inset:0;display:none;z-index:120;align-items:center;justify-content:center;padding:16px;
   background:rgba(4,2,10,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -528,6 +598,8 @@ canvas{display:block}
   .b-hand{gap:8px;padding:10px 14px 7px;max-width:820px;margin:0 auto;width:100%}
   .hcard .hinfo{font-size:9.5px;padding:14px 2px 4px}
   .hcard .hcond,.hcard .huses{font-size:9px}
+  .hcard .hcost{width:20px;height:20px;font-size:11px}
+  .exbtn{width:58px;height:58px}
   .hcard .heff{font-size:9px;bottom:16px}
   .b-portrait,.b-portrait canvas{width:68px;height:68px}
   .endturn{width:66px;height:66px;font-size:25px}
@@ -551,6 +623,8 @@ canvas{display:block}
   .gem{width:24px;height:26px}
   .b-portrait,.b-portrait canvas{width:48px;height:48px}
   .endturn{width:50px;height:50px;font-size:19px}
+  .exbtn{width:44px;height:44px}
+  .b-mana .orb{width:11px;height:14px}
   .cin-cards.many{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 }
 </style>
@@ -624,12 +698,17 @@ canvas{display:block}
       <button class="icobtn" id="btnQuit">✕</button>
       <div class="bt"><b id="bTitle">1-1 시작의 초원</b><span id="bSub">스테이지</span></div>
       <button class="icobtn" id="btnSpeed">1×</button>
+      <button class="icobtn" id="btnAuto">AUTO</button>
       <button class="icobtn" id="btnMute">🔊</button>
     </div>
     <div class="b-field" id="fieldWrap">
       <canvas id="field" width="400" height="300"></canvas>
       <div class="field-hud"><div class="field-log" id="fieldLog"></div></div>
       <div class="turn-banner" id="turnBanner"></div>
+      <div class="chain-badge" id="chainBadge"></div>
+      <div class="combo-banner" id="comboBanner"></div>
+      <div class="break-banner" id="breakBanner"></div>
+      <div class="excut" id="exCut"><div class="exrays"></div><div class="exword">OVERDRIVE</div><div class="exsub">무한의 일격</div></div>
       <div class="boss-warn" id="bossWarn"></div>
       <div id="guideBox"></div>
       <button class="tut-skip" id="btnTutSkip" style="display:none">건너뛰기</button>
@@ -637,11 +716,13 @@ canvas{display:block}
     <div class="b-hand" id="handEl"></div>
     <div class="b-bottom">
       <div class="b-portrait">
+        <svg class="odring" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34" stroke="rgba(245,201,106,.16)"></circle><circle id="odRing" cx="36" cy="36" r="34" stroke="#f5c96a" stroke-dasharray="213.6" stroke-dashoffset="213.6"></circle></svg>
         <svg class="ring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" stroke="rgba(255,255,255,.12)"></circle><circle id="hpRing" cx="32" cy="32" r="28" stroke="#5ce08a" stroke-dasharray="175.9" stroke-dashoffset="0"></circle></svg>
         <canvas id="portrait" width="112" height="112"></canvas>
         <div class="hpnum" id="hpNum">70/70</div>
       </div>
-      <div class="b-gems" id="gemsEl"></div>
+      <div class="b-mana" id="manaEl"></div>
+      <button class="exbtn" id="exBtn"><span class="exlabel">EX</span><span class="expct">0%</span></button>
       <button class="endturn" id="endTurn">▶<small>TURN</small></button>
     </div>
   </section>
@@ -1004,7 +1085,7 @@ const CARDS = [
   { id: 'r_priest', name: '성직자 리라', rare: '희귀', cond: 'le12', uses: 2, eff: 'heal', val: 9, fig: 'humanoid', w: 'staff', hat: 'hood', c1: '#ffe9a8', c2: '#fffbe8', c3: '#8a6a20', el: 'holy', desc: '12 이하 젬. 체력 9 회복.' },
   { id: 'r_shadow', name: '그림자 도적', rare: '희귀', cond: 'odd', uses: 2, eff: 'pierce', val: 8, fig: 'humanoid', w: 'dagger', hat: 'hood', c1: '#7a5aa8', c2: '#c8b0ff', c3: '#241a3a', el: 'shadow', desc: '홀수 젬. 방어 무시 8 피해.' },
   { id: 'r_storm', name: '번개 술사', rare: '희귀', cond: 'ge8', uses: 2, eff: 'all', val: 6, fig: 'humanoid', w: 'staff', hat: 'wizard', c1: '#7ab8ff', c2: '#e0f0ff', c3: '#1a3a7a', el: 'bolt', desc: '8 이상 젬. 모든 적에게 6 피해.' },
-  { id: 'r_gem', name: '젬 전문가 미나', rare: '희귀', cond: 'any', uses: 3, eff: 'reroll', val: 2, fig: 'humanoid', w: 'none', hat: 'hood', c1: '#5ae0c8', c2: '#d0fff8', c3: '#1a5a52', el: 'arcane', desc: '젬 2장을 다시 뽑는다.' },
+  { id: 'r_gem', name: '마나 조율사 미나', rare: '희귀', cond: 'any', uses: 3, eff: 'reroll', val: 2, fig: 'humanoid', w: 'none', hat: 'hood', c1: '#5ae0c8', c2: '#d0fff8', c3: '#1a5a52', el: 'arcane', desc: '젬 2장을 다시 뽑는다.' },
   { id: 'r_doll', name: '저주받은 인형', rare: '희귀', cond: 'le4', uses: 2, eff: 'poison', val: 4, fig: 'ghost', c1: '#c88ad0', c2: '#f0d0f8', c3: '#4a1a5a', el: 'shadow', desc: '4 이하 젬. 독 4를 3턴 부여.' },
   { id: 'r_twin', name: '쌍검 용병', rare: '희귀', cond: 'pairsuit', uses: 2, eff: 'dmg', val: 10, fig: 'humanoid', w: 'dagger', hat: 'none', c1: '#e0a05a', c2: '#ffe0b0', c3: '#6a3a18', el: 'fire', desc: '같은 모양 젬 2장. 단일 10 피해.' },
 
@@ -1028,6 +1109,77 @@ const CARDS = [
   { id: 'm_genesis', name: '창세의 카드', rare: '신화', cond: 'any', uses: 1, eff: 'genesis', val: 32, fig: 'lord', c1: '#fff3b0', c2: '#8ae0ff', c3: '#3a1a6a', el: 'prism', desc: '아무 젬. 단일 32 피해 + 카드 1장 드로우.' }
 ];
 const CARD_BY = {}; CARDS.forEach(c => CARD_BY[c.id] = c);
+
+/* ══════════════ 02-B · v3 전투 데이터 (마나 / 속성 / 약점 / 콤보) ══════════════ */
+const ELEM = {
+  fire:   { name: '화염', col: '#ff8a3d', icon: '🔥' },
+  ice:    { name: '얼음', col: '#9ae0ff', icon: '❄️' },
+  bolt:   { name: '번개', col: '#8fd0ff', icon: '⚡' },
+  shadow: { name: '암흑', col: '#b47bff', icon: '🌑' },
+  holy:   { name: '신성', col: '#ffe08a', icon: '✨' },
+  earth:  { name: '대지', col: '#c8a06a', icon: '🪨' },
+  nature: { name: '자연', col: '#8ae070', icon: '🌿' },
+  wind:   { name: '바람', col: '#8af0c8', icon: '🌪️' },
+  arcane: { name: '비전', col: '#c58bff', icon: '🔮' },
+  prism:  { name: '창세', col: '#ffffff', icon: '💠' }
+};
+const COST = {
+  ignis: 3, aegis: 3, chronos: 1,
+  c_rat: 1, c_slime: 1, c_guard: 1, c_farmer: 1, c_archer: 1, c_herb: 1,
+  c_candle: 2, c_golem: 2, c_merchant: 2, c_thiefcat: 2, c_shieldman: 2,
+  r_spear: 2, r_ice: 2, r_wind: 2, r_earth: 2, r_priest: 2, r_shadow: 2, r_gem: 1, r_doll: 2, r_twin: 3, r_storm: 3,
+  e_inferno: 3, e_frost: 3, e_stormlord: 3, e_paladin: 3, e_assassin: 3, e_runes: 2, e_reaper: 3, e_gold: 2,
+  l_dragon: 4, l_sage: 4, l_terra: 3, l_abyss: 4, l_star: 4, l_twins: 4,
+  m_lord: 5, m_genesis: 5
+};
+function cardCost(c) { return COST[c && c.id] || 1; }
+const FOE_WEAK = {
+  slime: ['fire', 'bolt'], rat: ['fire', 'ice'], mushroom: ['fire', 'holy'],
+  wolf: ['fire', 'ice'], skeleton: ['holy', 'bolt'], golem: ['bolt', 'ice'],
+  bat: ['wind', 'holy'], ghost: ['holy', 'wind'], imp: ['ice', 'holy'],
+  crab: ['bolt', 'ice'], serpent: ['ice', 'bolt'], knight: ['holy', 'bolt'],
+  mech: ['bolt', 'fire'], dragon: ['ice', 'bolt'], lord: ['holy', 'shadow']
+};
+const COMBO = {
+  'fire>wind':  { n: '열풍 확산', d: '화염이 바람을 타고 모든 적에게 번진다', fx: 'spread' },
+  'wind>fire':  { n: '열풍 확산', d: '바람이 화염을 키워 모든 적을 태운다', fx: 'spread' },
+  'ice>bolt':   { n: '초전도',   d: '얼어붙은 적을 감전 — 방어를 무시한다', fx: 'super' },
+  'bolt>ice':   { n: '초전도',   d: '번개가 얼음을 타고 방어를 꿰뚫는다', fx: 'super' },
+  'holy>shadow':{ n: '일식',     d: '빛과 어둠이 겹쳐 폭발한다', fx: 'eclipse' },
+  'shadow>holy':{ n: '일식',     d: '어둠을 삼킨 빛이 터진다', fx: 'eclipse' },
+  'fire>ice':   { n: '증기 폭발', d: '열과 냉기가 만나 폭발한다', fx: 'steam' },
+  'ice>fire':   { n: '증기 폭발', d: '얼음이 녹으며 증기가 터진다', fx: 'steam' },
+  'nature>fire':{ n: '산불',     d: '자연이 불을 키워 계속 타오른다', fx: 'wildfire' },
+  'fire>nature':{ n: '산불',     d: '불이 숲을 옮겨 붙는다', fx: 'wildfire' },
+  'earth>bolt': { n: '감전 지진', d: '대지가 전류를 타고 모든 적을 뒤흔든다', fx: 'quake' },
+  'bolt>earth': { n: '감전 지진', d: '번개가 지반을 갈라놓는다', fx: 'quake' },
+  'wind>ice':   { n: '빙결 폭풍', d: '바람이 얼어붙어 적을 묶는다', fx: 'freeze' },
+  'ice>wind':   { n: '빙결 폭풍', d: '얼음 가루가 폭풍이 되어 덮친다', fx: 'freeze' }
+};
+function autoDesc(c) {
+  const nm = (ELEM[c.el] || ELEM.arcane).name;
+  let t;
+  switch (c.eff) {
+    case 'dmg': t = '단일 ' + c.val + ' 피해'; break;
+    case 'pierce': t = '방어 무시 ' + c.val + ' 피해'; break;
+    case 'multi': t = (c.val >= 7 ? 3 : 2) + '회 ' + c.val + ' 피해'; break;
+    case 'all': t = '모든 적 ' + c.val + ' 피해'; break;
+    case 'block': t = '방어 ' + c.val; break;
+    case 'guard': t = '방어 ' + c.val + ' + 회복 ' + Math.round(c.val * .5); break;
+    case 'heal': t = '체력 ' + c.val + ' 회복'; break;
+    case 'drain': t = c.val + ' 피해 + ' + Math.round(c.val * .6) + ' 회복'; break;
+    case 'poison': t = '독 ' + c.val + ' (3턴)'; break;
+    case 'stun': t = c.val + ' 피해 + 기절'; break;
+    case 'buff': t = '공격력 +' + c.val + ' (전투)'; break;
+    case 'reroll': t = '마나 ' + (c.val + 1) + ' 회복 + 드로우'; break;
+    case 'gold': t = '🪙 ' + c.val + ' + 2 피해'; break;
+    case 'genesis': t = c.val + ' 피해 + 드로우'; break;
+    default: t = '효과';
+  }
+  return nm + ' · ' + t;
+}
+CARDS.forEach(c => { c.desc = autoDesc(c); });
+
 
 const THEMES = ['grass', 'forest', 'ruins', 'fire', 'snow', 'sea', 'swamp', 'cave', 'desert', 'storm', 'sky', 'void', 'machine', 'crystal', 'blood', 'throne'];
 const CHAPTERS = [
@@ -1082,7 +1234,7 @@ const FOE_DATA = {
 const RIVALS = [
   { name: '카드 견습생 루카', tier: '브론즈', hp: 110, atk: 6, deck: ['c_slime', 'c_rat', 'c_guard', 'c_archer', 'c_herb', 'c_candle'], face: 'knight' },
   { name: '떠돌이 검객 하론', tier: '브론즈', hp: 150, atk: 8, deck: ['c_guard', 'c_farmer', 'c_archer', 'r_spear', 'c_golem', 'r_wind'], face: 'knight' },
-  { name: '젬 도박사 베가', tier: '실버', hp: 200, atk: 10, deck: ['r_gem', 'c_candle', 'r_storm', 'r_twin', 'c_merchant', 'r_earth'], face: 'imp' },
+  { name: '마나 도박사 베가', tier: '실버', hp: 200, atk: 10, deck: ['r_gem', 'c_candle', 'r_storm', 'r_twin', 'c_merchant', 'r_earth'], face: 'imp' },
   { name: '서리 마법사 유키', tier: '실버', hp: 250, atk: 13, deck: ['r_ice', 'e_frost', 'r_priest', 'r_storm', 'e_runes', 'r_earth'], face: 'ghost' },
   { name: '그림자 상인 무영', tier: '골드', hp: 320, atk: 16, deck: ['e_assassin', 'r_shadow', 'e_gold', 'r_gem', 'e_reaper', 'l_abyss'], face: 'ghost' },
   { name: '폭풍 기사 카이', tier: '골드', hp: 390, atk: 19, deck: ['e_inferno', 'e_stormlord', 'e_paladin', 'l_terra', 'e_runes', 'r_spear'], face: 'knight' },
@@ -2113,6 +2265,21 @@ function drawCardFace(canvas, card, opts) {
   // 아트 테두리
   g.strokeStyle = hexA(col, .55); g.lineWidth = 1.2; rr(g, 8, 8, 204, 196, 9); g.stroke();
   g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = .6; rr(g, 9.4, 9.4, 201, 193, 8); g.stroke();
+  // 코스트 배지 (좌상단)
+  const cc = Math.min(5, cardCost(card));
+  g.save();
+  g.translate(27, 27);
+  const cg = g.createRadialGradient(-3, -3, 1, 0, 0, 15);
+  if (cc >= 4) { cg.addColorStop(0, '#fff6d8'); cg.addColorStop(.6, '#e8a93a'); cg.addColorStop(1, '#7a4a08'); }
+  else { cg.addColorStop(0, '#dff2ff'); cg.addColorStop(.6, '#3f86d8'); cg.addColorStop(1, '#12365f'); }
+  g.shadowColor = cc >= 4 ? 'rgba(255,176,32,.9)' : 'rgba(79,182,255,.85)'; g.shadowBlur = 9;
+  g.fillStyle = cg; g.beginPath(); g.arc(0, 0, 14, 0, 7); g.fill();
+  g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.1; g.beginPath(); g.arc(0, 0, 14, 0, 7); g.stroke();
+  g.fillStyle = cc >= 4 ? '#2a1600' : '#eaf8ff';
+  g.font = '900 15px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(String(cc), 0, .5);
+  g.restore();
   // 정보판
   const panel = g.createLinearGradient(0, 206, 0, 292);
   panel.addColorStop(0, 'rgba(18,11,30,.98)'); panel.addColorStop(1, 'rgba(6,3,12,.99)');
@@ -2141,14 +2308,13 @@ function drawCardFace(canvas, card, opts) {
   g.fillText(stars, 205, starY);
   // 구분선
   g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(15, 256, 190, .8);
-  // 조건
-  g.textAlign = 'left'; g.font = '800 10px sans-serif'; g.fillStyle = '#c9b8e8';
-  g.fillText('조건', 15, 270);
-  g.fillStyle = '#f0e6ff'; g.font = '800 10.5px sans-serif';
-  g.fillText(condLabel(card), 40, 270);
-  // 사용 횟수
-  g.textAlign = 'right'; g.fillStyle = '#ffe9a8'; g.font = '900 11px sans-serif';
-  g.fillText('×' + (card.uses || 1), 205, 270);
+  // 코스트 / 속성
+  g.textAlign = 'left'; g.font = '800 10px sans-serif'; g.fillStyle = '#8fb8dc';
+  g.fillText('마나', 15, 270);
+  g.fillStyle = '#e2f4ff'; g.font = '900 11.5px sans-serif';
+  g.fillText(String(cardCost(card)), 42, 270);
+  g.textAlign = 'right'; g.fillStyle = elData(card.el).col; g.font = '900 10.5px sans-serif';
+  g.fillText(elData(card.el).name, 205, 270);
   // 설명 한 줄
   g.textAlign = 'center'; g.font = '600 8.5px sans-serif'; g.fillStyle = 'rgba(200,185,228,.8)';
   const dlines = wrapLines(g, card.desc || '', 188, '600 8.5px sans-serif', 2);
@@ -2224,14 +2390,7 @@ function drawCardBack(canvas) {
   g.fillStyle = hexA('#f5c96a', .5); g.font = '700 7px sans-serif';
   g.fillText('C A R D   S A G A', 110, 274);
 }
-function condLabel(card) {
-  if (!card) return '';
-  if (card.cond === 'pair') return '두 젬 합≥15';
-  if (card.cond === 'pairsq') return '같은 숫자 2개';
-  if (card.cond === 'pairsuit') return '같은 모양 2개';
-  return (COND[card.cond] ? COND[card.cond].t : '?') + (COND[card.cond] && COND[card.cond].n > 1 ? '' : ' 1개');
-}
-function condNeed(card) { return COND[card.cond] ? COND[card.cond].n : 1; }
+function condLabel(card) { return card ? '마나 ' + cardCost(card) : ''; }
 
 /* 카드 DOM 요소 */
 function cardEl(card, opts) {
@@ -2920,52 +3079,55 @@ function drawForeground(g, W, H, theme, t) {
 }
 
 /* ===== 05-battle.js ===== */
-/* ══════════════ 05 · 전투 엔진 ══════════════ */
+/* ══════════════ 05 · 전투 엔진 v3 — 마나 · 약점 브레이크 · 속성 체인 · 오버드라이브 ══════════════ */
 let B = null;              // battle state
 let battleRAF = null;
-const GEM_TABLE = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 11, 12];
+const FONT = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
 const T = ms => (B ? Math.max(1, ms / (B.speed || 1)) : ms);
 
-function makeGem() { return { v: pick(GEM_TABLE), suit: pick(['tri', 'dia', 'hex', 'cir']) }; }
-function makeGems(n) { const out = []; for (let i = 0; i < n; i++) out.push(makeGem()); return out; }
-
-function gemSvg(gem) {
-  const S1 = SUITS[gem.suit];
-  let shape = '';
-  if (gem.suit === 'tri') shape = '<polygon points="16,3 29.5,27 2.5,27" fill="' + S1.color + '" stroke="' + S1.dark + '" stroke-width="2"/><polygon points="16,3 22,14 10,14" fill="rgba(255,255,255,.35)"/>';
-  else if (gem.suit === 'dia') shape = '<polygon points="16,2 28.5,16 16,30 3.5,16" fill="' + S1.color + '" stroke="' + S1.dark + '" stroke-width="2"/><polygon points="16,2 21,11 11,11" fill="rgba(255,255,255,.35)"/>';
-  else if (gem.suit === 'hex') shape = '<polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="' + S1.color + '" stroke="' + S1.dark + '" stroke-width="2"/><polygon points="16,2 22,8 10,8" fill="rgba(255,255,255,.35)"/>';
-  else shape = '<circle cx="16" cy="16" r="13.5" fill="' + S1.color + '" stroke="' + S1.dark + '" stroke-width="2"/><ellipse cx="12" cy="10" rx="5" ry="3.2" fill="rgba(255,255,255,.4)"/>';
-  return '<svg viewBox="0 0 32 32">' + shape + '</svg>';
-}
+function elData(el) { return ELEM[el] || ELEM.arcane; }
 
 function newBattle(cfg) {
   const baseHp = cfg.playerHp || (72 + playerLevel() * 5);
   B = {
-    cfg: cfg, turn: 1, phase: 'intro', gems: [], usedGems: [], sel: [], hand: [], deck: [], pile: [],
-    player: { maxhp: baseHp, hp: baseHp, block: 0, atkBuff: 0, pois: 0, poisT: 0 },
+    cfg: cfg, turn: 1, phase: 'intro', hand: [], deck: [], pile: [],
+    player: { maxhp: baseHp, hp: baseHp, block: 0, atkBuff: 0, pois: 0, poisT: 0, mana: 4, manaMax: 4, od: 0 },
     foes: [], log: [], pops: [], parts: [], rings: [], slashes: [], beams: [], amb: [],
-    shake: 0, flash: 0, flashCol: '#ff5a6e', speed: 1, cardsUsedThisTurn: {},
+    shake: 0, flash: 0, flashCol: '#ff5a6e', speed: 1,
+    chain: 0, lastEl: null, combo: null, target: 0,
+    auto: false, autoTimer: null,
     hero: { flash: 0, lunge: null, cast: 0 }, cast: null, intro: 1.0, boss: false,
     arena: !!cfg.arena, vw: 0, vh: 0, dpr: 1, dead: []
   };
   // 덱
   B.deck = shuffle(deckCards().map(c => c.id));
   if (!B.deck.length) B.deck = [S.starter || 'c_slime'];
-  if (cfg.tut && !B.deck.some(id => ['c_slime', 'c_farmer', 'c_thiefcat', 'ignis', 'r_spear', 'c_archer'].includes(id))) B.deck.unshift('c_slime');
+  if (cfg.tut) {
+    const starter = S.starter || 'c_archer';
+    B.hand = ['c_slime', 'c_farmer', 'c_guard', starter, 'c_archer'].filter((id, i, a) => a.indexOf(id) === i && CARD_BY[id]);
+    B.deck = B.deck.filter(id => B.hand.indexOf(id) < 0);
+    if (!B.deck.length) B.deck = ['c_thiefcat'];
+  }
   // 적
   B.foes = cfg.foes.map((f, i) => {
     const d = FOE_DATA[f.kind] || FOE_DATA.slime;
     const hp = Math.round(f.hp || d.hp * cfg.baseHp);
+    const weak = (f.weak || FOE_WEAK[f.kind] || ['fire', 'bolt']).slice(0, 2);
+    const smax = f.shieldMax != null ? f.shieldMax : (f.boss ? 4 : f.elite ? 3 : 2);
     return {
       kind: f.kind, name: f.name || d.name, boss: !!f.boss, elite: !!f.elite,
       hp, maxhp: hp, block: 0, top: d.top || .78, atk: Math.round(d.atk * (cfg.baseAtk || 6)),
       tele: f.tele || 2, pendingAct: null, pois: 0, poisT: 0,
+      weak: weak, shield: smax, shieldMax: smax,
+      broken: false, stunned: 0,
       x: 0, y: 0, h: 0, flash: 0, knock: 0, dying: 0, lunge: 0, phase: i * 1.7,
       act: pick(['dmg', 'dmg', 'dmg', 'dmgall', 'block', 'poison'])
     };
   });
   B.boss = B.foes.some(f => f.boss);
+  const cut = $('exCut'); if (cut) cut.classList.remove('on');
+  hideBattleBanners();
+  updateChain();
   startTurn(true);
   if (B.boss) {
     const b = B.foes.find(f => f.boss);
@@ -2974,8 +3136,11 @@ function newBattle(cfg) {
   }
   requestAnimationFrame(fitField);
   updateMuteBtn();
+  bindFieldTap();
+  updateAutoBtn();
 }
 
+/* ── 턴 ── */
 function startTurn(first) {
   if (!B) return;
   if (!first) B.turn++; else B.turn = 1;
@@ -2990,84 +3155,62 @@ function startTurn(first) {
     logMsg('독 ' + d + ' 피해');
     if (B.player.hp <= 0) { setTimeout(() => { if (B && B.phase !== 'end') lose(); }, T(420)); }
   }
-  B.gems = makeGems(6);
-  B.usedGems = new Array(6).fill(false);
-  B.sel = [];
+  // 마나 회복 (턴마다 최대치 +, 매 턴 완충)
+  B.player.manaMax = Math.min(8, 4 + Math.floor((B.turn - 1) / 3));
+  B.player.mana = B.player.manaMax;
+  B.chain = 0; B.lastEl = null;
+  // 핸드 보충
   while (B.hand.length < 6) {
     if (!B.deck.length) { B.deck = shuffle(B.pile); B.pile = []; if (!B.deck.length) break; }
     B.hand.push(B.deck.pop());
   }
-  B.cardsUsedThisTurn = {};
-  if (B.cfg.tut && !B.hand.some(id => CARD_BY[id] && findMatch(CARD_BY[id]))) {
-    if (!B.hand.includes('c_slime')) B.hand[0] = 'c_slime';
+  if (B.cfg.tut && !B.hand.some(id => CARD_BY[id] && cardCost(CARD_BY[id]) <= B.player.mana)) {
+    if (!B.hand.includes('c_slime')) { if (!B.hand.length) B.hand.push('c_slime'); else B.hand[0] = 'c_slime'; }
+    else if (!B.hand.includes('c_farmer')) { if (!B.hand.length) B.hand.push('c_farmer'); else B.hand[0] = 'c_farmer'; }
   }
   B.phase = 'play';
-  renderGems(); renderHand(); updateHud();
-  logMsg('— ' + B.turn + '턴 —');
+  renderMana(); renderHand(); updateHud(); updateChain(); updateExBtn(); updateAutoBtn();
+  logMsg('— ' + B.turn + '턴 — 마나 ' + B.player.mana);
   if (!first) { showBanner('TURN ' + B.turn); SFX.turn(); }
   // 적 예고
   B.foes.forEach(f => {
-    if (f.hp > 0) { f.pendingAct = f.act; f.tele = 0; }
+    if (f.hp > 0 && !f.broken) { f.pendingAct = f.act; f.tele = 0; }
   });
+  if (B.auto) scheduleAuto();
 }
 
-/* ── 젬 조건 ── */
-function condMatch(card, idxs) {
-  const need = condNeed(card);
-  if (!idxs || idxs.length < need) return false;
-  const pick2 = idxs.slice(0, need);
-  const vals = pick2.map(i => B.gems[i].v), suits = pick2.map(i => B.gems[i].suit);
-  switch (card.cond) {
-    case 'any': return true;
-    case 'even': return vals.every(v => v % 2 === 0);
-    case 'odd': return vals.every(v => v % 2 === 1);
-    case 'le4': return vals.every(v => v <= 4);
-    case 'le8': return vals.every(v => v <= 8);
-    case 'le12': return vals.every(v => v <= 12);
-    case 'ge8': return vals.every(v => v >= 8);
-    case 'ge12': return vals.every(v => v >= 12);
-    case 'tri': case 'dia': case 'hex': case 'cir': return suits.every(s => s === card.cond);
-    case 'pair': return vals.reduce((a, b) => a + b, 0) >= 15;
-    case 'pairsq': return vals[0] === vals[1];
-    case 'pairsuit': return suits[0] === suits[1];
-  }
-  return false;
-}
-function availableGems() {
+/* ── 플레이 가능 ── */
+function playableCards() {
   const out = [];
-  if (!B) return out;
-  for (let i = 0; i < B.gems.length; i++) if (!B.usedGems[i]) out.push(i);
+  if (!B || B.phase !== 'play') return out;
+  B.hand.forEach((id, i) => {
+    const c = CARD_BY[id];
+    if (c && cardCost(c) <= B.player.mana) out.push(i);
+  });
   return out;
 }
-function findMatch(card) {
-  const need = condNeed(card);
-  const avail = availableGems();
-  if (need === 1) {
-    for (const i of avail) if (condMatch(card, [i])) return [i];
-    return null;
-  }
-  for (let a = 0; a < avail.length; a++) for (let b = a + 1; b < avail.length; b++) {
-    if (condMatch(card, [avail[a], avail[b]])) return [avail[a], avail[b]];
-  }
-  return null;
+function cardsReady2() { return playableCards().length > 0 || B.player.od >= 100; }
+function aliveFoes() { return B ? B.foes.filter(f => f.hp > 0) : []; }
+function curTarget() {
+  if (!B) return null;
+  const al = aliveFoes();
+  if (!al.length) return null;
+  const t = B.foes[B.target];
+  if (!t || t.hp <= 0) { B.target = B.foes.indexOf(al[0]); return al[0]; }
+  return t;
 }
-function cardsReady() {
-  const set = {};
-  if (!B) return set;
-  B.hand.forEach(id => {
-    const c = CARD_BY[id]; if (!c) return;
-    if ((B.cardsUsedThisTurn[id] || 0) >= (c.uses || 1)) return;
-    if (findMatch(c)) set[id] = 1;
-  });
-  return set;
+function foeWeak(f, el) {
+  if (!f || !f.weak) return false;
+  if (el === 'prism') return f.weak.length > 0;
+  return f.weak.indexOf(el) >= 0;
 }
 
-/* ── 효과음/이펙트 ── */
+/* ── 이펙트 ── */
 function heroPos() { return { x: B.vw * .21, y: B.vh * .8 }; }
 function foePos(f) { return { x: f.x, y: f.y }; }
 function addPop(x, y, text, col, size, crit) {
   if (!B) return;
-  B.pops.push({ x, y, text, col: col || '#ff7a8a', size: size || 1, crit: !!crit, t0: performance.now(), life: crit ? 1150 : 950, drift: rndF(-16, 16) });
+  B.pops.push({ x, y, text, col: col || '#ff7a8a', size: size || 1, crit: !!crit, t0: performance.now(), life: crit ? 1250 : 950, drift: rndF(-16, 16) });
 }
 function addParts(x, y, col, n, kind) {
   if (!B) return;
@@ -3094,7 +3237,7 @@ function addBeam(x, y, col, w) {
   B.beams.push({ x, y, col, w: w || 26, t0: performance.now(), life: 460 });
 }
 function elementFX(el, x, y) {
-  const col = { fire: '#ff8a3d', ice: '#9ae0ff', bolt: '#8fd0ff', shadow: '#b47bff', holy: '#ffe08a', earth: '#c8a06a', nature: '#8ae070', wind: '#8af0c8', arcane: '#c58bff', prism: '#ffffff' }[el] || '#ffe08a';
+  const col = elData(el).col;
   switch (el) {
     case 'fire':
       addParts(x, y, '#ff8a3d', 26, 'fire'); addParts(x, y, '#ffd54a', 14, 'fire');
@@ -3142,12 +3285,44 @@ function showBossWarn(name) {
   SFX.burst(4);
   setTimeout(() => el.classList.remove('on'), 2500);
 }
+function showCombo(name, desc) {
+  const el = $('comboBanner'); if (!el) return;
+  el.innerHTML = '<b>' + esc(name) + '</b><span>' + esc(desc || '') + '</span>';
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+  if (typeof SFX.burst === 'function') SFX.burst(3);
+}
+function showBreakBanner() {
+  const el = $('breakBanner'); if (!el) return;
+  el.innerHTML = '<b>BREAK!</b><span>실드 붕괴 · 기절 · 피해 1.5배</span>';
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+}
+function hideBattleBanners() {
+  ['comboBanner', 'breakBanner'].forEach(id => {
+    const el = $(id); if (el) el.classList.remove('on');
+  });
+}
+function updateChain() {
+  const el = $('chainBadge'); if (!el) return;
+  if (!B || B.chain < 1) { el.classList.remove('on'); el.innerHTML = ''; return; }
+  el.innerHTML = '<b>' + B.chain + '</b><span>CHAIN</span>';
+  el.classList.add('on');
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+}
+
+/* ── 게이지 ── */
+function gainOD(n) {
+  if (!B) return;
+  B.player.od = clamp(B.player.od + n, 0, 100);
+  updateExBtn(); updateHud();
+}
 
 /* ── 데미지 ── */
 function dealDmg(foe, amount, opts) {
   opts = opts || {};
   if (!foe || foe.hp <= 0) return 0;
-  let dmg = Math.round(amount + B.player.atkBuff);
+  let dmg = Math.round((amount + (opts.flat ? 0 : B.player.atkBuff)) * (opts.mul || 1));
+  if (opts.el && foeWeak(foe, opts.el)) dmg = Math.round(dmg * 1.25);
+  if (foe.broken) dmg = Math.round(dmg * 1.5);
   const crit = opts.crit === false ? false : Math.random() < (opts.critChance == null ? .12 : opts.critChance);
   if (crit) dmg = Math.round(dmg * 1.65);
   let absorbed = 0;
@@ -3158,18 +3333,20 @@ function dealDmg(foe, amount, opts) {
   }
   foe.hp = Math.max(0, foe.hp - dmg);
   foe.flash = 1; foe.knock = 1;
-  addPop(foe.x + foe.h * .2, foe.y - foe.h * .2, '-' + dmg, crit ? '#ffe9a8' : '#ff8090', crit ? 1.4 : 1, crit);
+  addPop(foe.x + foe.h * .2, foe.y - foe.h * .2, '-' + dmg, crit ? '#ffe9a8' : (foeWeak(foe, opts.el) ? '#ffe0a0' : '#ff8090'), crit ? 1.4 : 1, crit);
   if (crit) { flash('#ffd9a0', .5); shake(12); SFX.crit(); }
   else { shake(3 + Math.min(7, dmg * .18)); SFX.hit(); }
   flash('#ff5a6e', .14);
   if (foe.hp <= 0 && !foe.dying) {
     foe.dying = performance.now();
-    addParts(foe.x, foe.y - foe.h * .4, FOE_DATA[foe.kind] ? FOE_DATA[foe.kind].col : '#fff', 26, 'wisp');
+    addParts(foe.x, foe.y - foe.h * .4, (FOE_DATA[foe.kind] || {}).col || '#fff', 26, 'wisp');
     addRing(foe.x, foe.y - foe.h * .35, '#ffffff', 6, foe.h * .8, 620, 3);
+    if (!aliveFoes().length) setTimeout(() => { if (B && B.phase !== 'end') win(); }, T(760));
   }
   return dmg;
 }
 function healPlayer(amount) {
+  if (!B) return;
   const before = B.player.hp;
   B.player.hp = Math.min(B.player.maxhp, B.player.hp + amount);
   const gained = B.player.hp - before;
@@ -3178,6 +3355,7 @@ function healPlayer(amount) {
   addRing(heroPos().x, heroPos().y - B.vh * .25, '#5ce08a', 8, B.vh * .3, 700, 2.5);
 }
 function addBlock(amount) {
+  if (!B) return;
   B.player.block += amount;
   addPop(heroPos().x, heroPos().y - B.vh * .3, '🛡+' + amount, '#7fd4ff', 1.2);
   addRing(heroPos().x, heroPos().y - B.vh * .25, '#7fd4ff', B.vh * .12, B.vh * .3, 600, 3);
@@ -3185,48 +3363,86 @@ function addBlock(amount) {
   SFX.block();
 }
 
+/* ── 약점 실드 / 브레이크 ── */
+function hitShield(foe, n, el) {
+  if (!B || !foe || foe.hp <= 0 || foe.broken) return;
+  if (!foeWeak(foe, el)) return;
+  const d = n || 1;
+  foe.shield = Math.max(0, foe.shield - d);
+  addPop(foe.x + foe.h * .26, foe.y - foe.h * .52, '실드 -' + d, '#9fe0ff', .9);
+  addParts(foe.x, foe.y - foe.h * .5, '#9fe0ff', 12, 'shard');
+  SFX.block();
+  if (foe.shield <= 0) breakFoe(foe);
+}
+function breakFoe(foe) {
+  if (!B || foe.broken || foe.hp <= 0) return;
+  foe.broken = true; foe.stunned = 1; foe.pendingAct = null;
+  B.player.mana = Math.min(B.player.manaMax + 3, B.player.mana + 1);
+  gainOD(10);
+  flash('#fff2c0', .6); shake(14);
+  addPop(foe.x, foe.y - foe.h * .82, 'BREAK!', '#ffe08a', 1.7, true);
+  addRing(foe.x, foe.y - foe.h * .42, '#ffe08a', foe.h * .1, foe.h * .9, 700, 5);
+  addParts(foe.x, foe.y - foe.h * .45, '#fff2c0', 30, 'spark');
+  addParts(foe.x, foe.y - foe.h * .45, '#9fe0ff', 20, 'shard');
+  SFX.burst(4); SFX.crit();
+  showBreakBanner();
+  logMsg('💥 ' + foe.name + ' 브레이크! 마나 +1');
+  renderMana(); renderHand(); updateHud();
+}
+
 /* ── 카드 사용 ── */
 function useCardAt(i) {
   if (!B || B.phase !== 'play') return;
   const id = B.hand[i]; if (!id) return;
   const c = CARD_BY[id]; if (!c) return;
-  const used = B.cardsUsedThisTurn[id] || 0;
-  if (used >= (c.uses || 1)) { toast('이번 턴 사용 횟수를 다 썼어'); SFX.gemBad(); return; }
-  const idxs = findMatch(c);
-  if (!idxs) { toast('조건에 맞는 젬이 없어 · ' + condLabel(c)); SFX.gemBad(); return; }
-  // 젬 소모
-  idxs.forEach(k => { B.usedGems[k] = true; });
-  B.cardsUsedThisTurn[id] = used + 1;
+  const cost = cardCost(c);
+  if (B.player.mana < cost) { toast('마나가 부족해 · ' + cost + ' 필요'); SFX.gemBad(); return; }
+  const prevEl = B.lastEl;
+  hideBattleBanners();
+  const el = c.el || 'arcane';
+  B.player.mana -= cost;
   B.hand.splice(i, 1);
   B.pile.push(id);
-  B.sel = [];
+  B.chain++;
+  B.lastEl = el;
+  const mul = 1 + .15 * (B.chain - 1);
   B.hero.cast = performance.now();
-  B.cast = { name: c.name, el: c.el || 'arcane', t0: performance.now() };
+  B.cast = { name: c.name, el: el, t0: performance.now() };
+  const col = elData(el).col;
+  logMsg('▶ ' + c.name + ' · ' + cost + '마나' + (B.chain > 1 ? ' · ' + B.chain + 'CHAIN' : ''));
+  addRing(heroPos().x, heroPos().y - B.vh * .26, col, 10, B.vh * .26, 480, 2.5);
   const cp = cardPower(c);
-  logMsg('▶ ' + c.name);
-  const elCol = { fire: '#ff8a3d', ice: '#9ae0ff', bolt: '#8fd0ff', shadow: '#b47bff', holy: '#ffe08a', earth: '#c8a06a', nature: '#8ae070', wind: '#8af0c8', arcane: '#c58bff', prism: '#fff8e0' }[c.el] || '#ffe08a';
-  addRing(heroPos().x, heroPos().y - B.vh * .26, elCol, 10, B.vh * .26, 480, 2.5);
-  resolveCard(cp);
-  renderGems(); renderHand(); updateHud();
+  resolveCard(cp, { el: el, mul: mul });
+  gainOD(12);
+  const cb = prevEl ? COMBO[prevEl + '>' + el] : null;
+  if (cb) triggerCombo(cb, cp, el, mul);
+  updateChain();
+  renderMana(); renderHand(); updateHud(); updateExBtn();
   if (typeof TUT !== 'undefined' && TUT.active) tutHook('card');
   if (!B || B.phase !== 'play') return;
   if (!aliveFoes().length) { setTimeout(() => { if (B && B.phase !== 'end') win(); }, T(650)); return; }
-  if (!B.hand.length) setTimeout(() => { if (B && B.phase === 'play') endTurn(); }, T(700));
-  else if (B.gems.every((g, k) => B.usedGems[k])) setTimeout(() => { if (B && B.phase === 'play') endTurn(); }, T(650));
+  if (B.auto) scheduleAuto();
 }
-function resolveCard(c) {
+function resolveCard(c, opts) {
+  opts = opts || {};
+  const el = opts.el || c.el || 'arcane';
+  const mul = opts.mul || 1;
   const foes = aliveFoes();
-  const t0 = foes[0];
+  const t0 = curTarget() || foes[0];
   const tp = t0 ? { x: t0.x, y: t0.y - t0.h * .45 } : { x: B.vw * .7, y: B.vh * .45 };
-  const el = c.el || 'arcane';
   const E = (x, y) => elementFX(el, x, y);
+  const hit = (f, val, extra) => {
+    if (!B || !f || f.hp <= 0) return;
+    dealDmg(f, val, Object.assign({ el: el, mul: mul }, extra || {}));
+    hitShield(f, 1, el);
+  };
   switch (c.eff) {
     case 'dmg': {
       if (t0) {
         B.hero.lunge = performance.now();
         addSlash(tp.x, tp.y + t0.h * .1, '#fff3d0', t0.h * .9, rndF(-1.1, -.3));
         E(tp.x, tp.y);
-        setTimeout(() => { if (B) dealDmg(t0, c.val); }, T(120));
+        setTimeout(() => { if (B) hit(t0, c.val); }, T(120));
       }
       break;
     }
@@ -3235,21 +3451,22 @@ function resolveCard(c) {
         B.hero.lunge = performance.now();
         addSlash(tp.x, tp.y + t0.h * .1, '#c8a0ff', t0.h * 1.05, -.75);
         E(tp.x, tp.y);
-        setTimeout(() => { if (B) dealDmg(t0, c.val, { pierce: 1 }); }, T(110));
+        setTimeout(() => { if (B) hit(t0, c.val, { pierce: 1 }); }, T(110));
       }
       break;
     }
     case 'multi': {
-      const hits = c.val >= 10 ? 3 : (c.val >= 7 ? 3 : 2);
+      const hits = c.val >= 7 ? 3 : 2;
       B.hero.lunge = performance.now();
       for (let k = 0; k < hits; k++) {
         setTimeout(() => {
           if (!B) return;
-          const f = aliveFoes()[0];
-          if (!f) return;
+          const f = curTarget();
+          if (!f || f.hp <= 0) return;
           addSlash(f.x, f.y - f.h * .45, '#fff3d0', f.h * .8, rndF(-1.2, .2));
           elementFX(el, f.x, f.y - f.h * .4);
-          dealDmg(f, c.val, { critChance: .1 });
+          dealDmg(f, c.val, { el: el, mul: mul, critChance: .1 });
+          if (k === 0) hitShield(f, 1, el);
         }, T(k * 170));
       }
       break;
@@ -3257,11 +3474,7 @@ function resolveCard(c) {
     case 'all': {
       B.hero.lunge = performance.now();
       aliveFoes().forEach((f, k) => {
-        setTimeout(() => {
-          if (!B || f.hp <= 0) return;
-          elementFX(el, f.x, f.y - f.h * .4);
-          dealDmg(f, c.val);
-        }, T(k * 130));
+        setTimeout(() => { hit(f, c.val); }, T(k * 130));
       });
       flash(el === 'shadow' ? '#b47bff' : el === 'bolt' ? '#bfe0ff' : '#ffd0a0', .25);
       break;
@@ -3275,9 +3488,8 @@ function resolveCard(c) {
         elementFX('shadow', t0.x, t0.y - t0.h * .4);
         setTimeout(() => {
           if (!B) return;
-          dealDmg(t0, c.val);
+          hit(t0, c.val);
           healPlayer(Math.round(c.val * .6));
-          // 흡수 빔
           B.beams.push({ x: t0.x, y: t0.y - t0.h * .4, col: '#c88aff', w: 14, t0: performance.now(), life: 420, toHero: true });
         }, T(110));
       }
@@ -3289,12 +3501,13 @@ function resolveCard(c) {
         addParts(t0.x, t0.y - t0.h * .45, '#8ae070', 22, 'poison');
         addPop(t0.x, t0.y - t0.h * .7, '독 ' + c.val, '#9ae070', 1.1);
         SFX.poison(); logMsg(t0.name + ' 독 ' + c.val + ' (3턴)');
+        hitShield(t0, 1, el);
       }
       break;
     }
     case 'stun': {
       if (t0) {
-        dealDmg(t0, c.val);
+        hit(t0, c.val);
         addPop(t0.x, t0.y - t0.h * .8, 'STUN', '#bfeaff', 1.1);
         addParts(t0.x, t0.y - t0.h * .5, '#bfeaff', 18, 'shard');
         SFX.stun();
@@ -3311,18 +3524,19 @@ function resolveCard(c) {
       break;
     }
     case 'reroll': {
-      let cnt = 0;
-      for (let i = 0; i < B.gems.length && cnt < c.val; i++) {
-        if (B.usedGems[i]) { B.gems[i] = makeGem(); B.usedGems[i] = false; cnt++; }
-      }
-      if (!cnt) { for (let i = 0; i < Math.min(c.val, B.gems.length); i++) { B.gems[i] = makeGem(); } cnt = Math.min(c.val, B.gems.length); }
-      showBanner('REROLL');
+      B.player.mana = Math.min(B.player.manaMax + 3, B.player.mana + c.val + 1);
+      showBanner('MANA +' + (c.val + 1));
       addParts(B.vw * .5, B.vh * .93, '#c58bff', 26, 'wisp');
-      SFX.draw(); logMsg('젬 ' + cnt + '장 리롤');
+      addPop(heroPos().x, heroPos().y - B.vh * .3, '+' + (c.val + 1) + ' 마나', '#c58bff', 1.2);
+      SFX.draw(); logMsg('마나 +' + (c.val + 1));
+      if (!B.deck.length) { B.deck = shuffle(B.pile); B.pile = []; }
+      const id2 = B.deck.pop();
+      if (id2) { B.hand.push(id2); SFX.draw(); logMsg('카드 1장 드로우'); }
+      renderMana();
       break;
     }
     case 'gold': {
-      if (t0) dealDmg(t0, 2, { critChance: 0 });
+      if (t0) hit(t0, 2, { critChance: 0 });
       S.gold += c.val; save(); updateCur();
       addPop(heroPos().x, heroPos().y - B.vh * .36, '🪙 +' + c.val, '#ffd54a', 1.3);
       addParts(heroPos().x, heroPos().y - B.vh * .28, '#ffd54a', 18, 'coin');
@@ -3333,26 +3547,139 @@ function resolveCard(c) {
       if (t0) {
         addBeam(t0.x, t0.y - t0.h * .8, '#ffffff', 30);
         elementFX('prism', t0.x, t0.y - t0.h * .4);
-        dealDmg(t0, c.val, { critChance: .2 });
+        dealDmg(t0, c.val, { el: 'prism', mul: mul, critChance: .2 });
+        hitShield(t0, 2, 'prism');
       }
       if (B.deck.length || B.pile.length) {
         if (!B.deck.length) { B.deck = shuffle(B.pile); B.pile = []; }
-        const id = B.deck.pop();
-        if (id) { B.hand.push(id); SFX.draw(); logMsg('카드 1장 드로우'); }
+        const id3 = B.deck.pop();
+        if (id3) { B.hand.push(id3); SFX.draw(); logMsg('카드 1장 드로우'); }
       }
       break;
     }
   }
-  if (el === 'fire' || el === 'ice' || el === 'bolt') { /* 사운드는 elementFX에서 */ }
 }
-function aliveFoes() { return B ? B.foes.filter(f => f.hp > 0) : []; }
+
+/* ── 속성 콤보 ── */
+function triggerCombo(cb, cp, el, mul) {
+  if (!B) return;
+  B.combo = cb.n;
+  showCombo(cb.n, cb.d);
+  gainOD(8);
+  const t = curTarget();
+  const base = cp.val;
+  logMsg('✦ 콤보 ' + cb.n);
+  switch (cb.fx) {
+    case 'spread':
+      aliveFoes().forEach((f, k) => {
+        if (f === t) return;
+        setTimeout(() => {
+          if (!B || f.hp <= 0) return;
+          elementFX('fire', f.x, f.y - f.h * .4);
+          dealDmg(f, Math.round(base * .55), { el: 'fire', mul: mul });
+          hitShield(f, 1, 'fire');
+        }, T(170 + k * 90));
+      });
+      break;
+    case 'super':
+      if (t) setTimeout(() => {
+        if (!B || t.hp <= 0) return;
+        addBeam(t.x, t.y - t.h * .7, '#bfeaff', 22);
+        dealDmg(t, Math.round(base * .5), { el: 'bolt', pierce: 1, mul: mul });
+        hitShield(t, 1, 'bolt');
+      }, T(150));
+      break;
+    case 'eclipse':
+      if (t) setTimeout(() => {
+        if (!B || t.hp <= 0) return;
+        flash('#ffffff', .5);
+        elementFX('holy', t.x, t.y - t.h * .42);
+        elementFX('shadow', t.x, t.y - t.h * .3);
+        dealDmg(t, Math.round(base * .6), { el: 'holy', mul: mul });
+      }, T(150));
+      gainOD(16);
+      break;
+    case 'steam':
+      aliveFoes().forEach((f, k) => setTimeout(() => {
+        if (!B || f.hp <= 0) return;
+        elementFX('ice', f.x, f.y - f.h * .4);
+        addParts(f.x, f.y - f.h * .4, '#ffffff', 18, 'wisp');
+        dealDmg(f, Math.round(base * .4), { el: 'ice', mul: mul });
+      }, T(150 + k * 80)));
+      break;
+    case 'wildfire':
+      aliveFoes().forEach(f => {
+        if (f.poisT > 0) { f.poisT = 3; f.pois += 2; }
+      });
+      if (t) {
+        t.pois += 2; t.poisT = 3;
+        addPop(t.x, t.y - t.h * .7, '불꽃 독', '#ffb04a', 1.05);
+        addParts(t.x, t.y - t.h * .45, '#ffb04a', 18, 'fire');
+      }
+      break;
+    case 'quake':
+      shake(12);
+      aliveFoes().forEach((f, k) => setTimeout(() => {
+        if (!B || f.hp <= 0) return;
+        elementFX('earth', f.x, f.y - f.h * .3);
+        dealDmg(f, Math.round(base * .45), { el: 'earth', mul: mul });
+        hitShield(f, 1, 'earth');
+      }, T(140 + k * 80)));
+      break;
+    case 'freeze':
+      aliveFoes().forEach((f, k) => setTimeout(() => {
+        if (!B || f.hp <= 0) return;
+        elementFX('ice', f.x, f.y - f.h * .4);
+        dealDmg(f, Math.round(base * .35), { el: 'ice', mul: mul });
+        if (f.pendingAct === 'dmg' || f.pendingAct === 'dmgall') f.pendingAct = 'block';
+      }, T(140 + k * 80)));
+      break;
+  }
+}
+
+/* ── 오버드라이브 EX ── */
+function fireEX() {
+  if (!B || B.phase !== 'play' || B.player.od < 100) return;
+  B.phase = 'ex';
+  B.player.od = 0;
+  const cut = $('exCut');
+  if (cut) { cut.classList.remove('on'); void cut.offsetWidth; cut.classList.add('on'); }
+  flash('#fff2c0', .85); shake(16);
+  SFX.burst(5); SFX.rainbow();
+  logMsg('★ 오버드라이브 — 무한의 일격!');
+  updateExBtn(); updateHud(); renderHand();
+  setTimeout(() => {
+    if (!B) return;
+    const base = 34 + playerLevel() * 3;
+    aliveFoes().forEach((f, k) => setTimeout(() => {
+      if (!B || f.hp <= 0) return;
+      addBeam(f.x, f.y - f.h * .8, '#fff3c0', 34);
+      elementFX('prism', f.x, f.y - f.h * .4);
+      dealDmg(f, base, { el: 'prism', critChance: 0, flat: true });
+      hitShield(f, 2, 'prism');
+    }, T(150 * k)));
+    healPlayer(Math.round(B.player.maxhp * .28));
+    B.player.atkBuff += 2;
+    addPop(heroPos().x, heroPos().y - B.vh * .34, 'ATK +2', '#ffb85a', 1.15);
+    setTimeout(() => {
+      if (!B) return;
+      if (!aliveFoes().length) { win(); return; }
+      B.phase = 'play';
+      renderMana(); renderHand(); updateHud(); updateExBtn();
+      if (B.auto) scheduleAuto();
+    }, T(820));
+  }, T(560));
+}
 
 /* ── 턴 넘김 ── */
 function endTurn() {
   if (!B || B.phase !== 'play') return;
   B.phase = 'enemy';
-  B.sel = [];
-  renderGems();
+  B.chain = 0; B.lastEl = null; B.combo = null;
+  hideBattleBanners();
+  updateChain();
+  renderHand();
+  clearTimeout(B.autoTimer);
   // 독 틱
   aliveFoes().forEach(f => {
     if (f.pois > 0 && f.poisT > 0) {
@@ -3370,6 +3697,16 @@ function endTurn() {
     if (idx >= list.length) { finishEnemy(); return; }
     const f = list[idx++];
     if (f.hp <= 0) { step(); return; }
+    if (f.broken) {
+      f.broken = false; f.stunned = 0; f.pendingAct = null;
+      f.shield = f.shieldMax;
+      addPop(f.x, f.y - f.h * .5, '실드 재생', '#9fe0ff', 1.05);
+      addParts(f.x, f.y - f.h * .45, '#9fe0ff', 14, 'shard');
+      addRing(f.x, f.y - f.h * .4, '#7fd4ff', 8, f.h * .5, 520, 2);
+      SFX.stun(); logMsg(f.name + ' 브레이크 — 행동 불가, 실드 재생');
+      setTimeout(step, T(560));
+      return;
+    }
     if (f.stunned) {
       f.stunned = 0; f.pendingAct = null;
       addPop(f.x, f.y - f.h * .5, '기절', '#bfeaff', 1.05);
@@ -3409,6 +3746,7 @@ function foeAct(f, done) {
       if (blocked > 0) addPop(heroPos().x + 20, heroPos().y - B.vh * .36, '🛡' + blocked, '#7fd4ff', .9);
       addParts(heroPos().x, heroPos().y - B.vh * .22, '#ff7a8a', 16, 'spark');
       shake(9); flash('#ff3040', .3); SFX.hit();
+      gainOD(7);
       logMsg(f.name + ' ' + label + '! ' + (d > 0 ? d + ' 피해' : '방어 성공'));
       updateHud();
       if (B.player.hp <= 0) { lose(); return; }
@@ -3435,10 +3773,55 @@ function finishEnemy() {
   startTurn();
 }
 
+/* ── AUTO ── */
+function toggleAuto() {
+  if (!B) return;
+  B.auto = !B.auto;
+  updateAutoBtn();
+  if (B.auto) scheduleAuto(); else clearTimeout(B.autoTimer);
+}
+function updateAutoBtn() {
+  const b = $('btnAuto'); if (!b) return;
+  b.classList.toggle('on', !!(B && B.auto));
+  b.textContent = 'AUTO';
+}
+function scheduleAuto() {
+  if (!B || !B.auto) return;
+  clearTimeout(B.autoTimer);
+  B.autoTimer = setTimeout(autoStep, T(640));
+}
+function autoStep() {
+  if (!B || !B.auto) return;
+  if (B.phase === 'ex') { scheduleAuto(); return; }
+  if (B.phase !== 'play') return;
+  if (B.player.od >= 100) { fireEX(); return; }
+  const idxs = playableCards();
+  if (idxs.length) {
+    const t = curTarget();
+    let best = -1, bestSc = -1e9;
+    idxs.forEach(i => {
+      const c = CARD_BY[B.hand[i]]; if (!c) return;
+      const el = c.el || 'arcane';
+      const atk = ['dmg', 'pierce', 'multi', 'all', 'drain', 'genesis', 'stun'].indexOf(c.eff) >= 0;
+      let sc = 0;
+      if (atk) sc += 30;
+      if (t && foeWeak(t, el)) sc += 26;
+      if (B.lastEl && COMBO[B.lastEl + '>' + el]) sc += 18;
+      if (c.eff === 'heal' && B.player.hp < B.player.maxhp * .5) sc += 24;
+      if (c.eff === 'block') sc += 6;
+      sc += c.val * .2 - cardCost(c) * 2;
+      if (sc > bestSc) { bestSc = sc; best = i; }
+    });
+    if (best >= 0 && B.hand[best]) { useCardAt(best); return; }
+  }
+  endTurn();
+}
+
 /* ── 승/패 ── */
 function win() {
   if (!B || B.phase === 'end') return;
   B.phase = 'end';
+  B.auto = false; clearTimeout(B.autoTimer);
   SFX.win();
   showBanner('VICTORY');
   const cfg = B.cfg;
@@ -3465,11 +3848,12 @@ function win() {
 function lose() {
   if (!B || B.phase === 'end') return;
   B.phase = 'end'; SFX.lose();
+  B.auto = false; clearTimeout(B.autoTimer);
   const tut = !!B.cfg.tut, title = B.cfg.title;
   if (B.cfg.arena) { S.arenaLoses++; S.arenaPts = Math.max(0, S.arenaPts - Math.round((B.cfg.pts || 20) / 2)); save(); }
   setTimeout(() => {
     if (tut) {
-      const m = modal('<h2>패배…</h2><p class="center">괜찮아, 다시 한 번!<br>카드의 <b>조건 배지</b>와 젬 색·숫자를 확인하자.</p>' +
+      const m = modal('<h2>패배…</h2><p class="center">괜찮아, 다시 한 번!<br>카드 <b>코스트</b>와 적 <b>약점 속성</b>을 확인하자.</p>' +
         '<div class="mbtns"><button class="btn primary" id="rTut">다시 도전</button><button class="btn ghost" id="rSkip">스타터팩 받기</button></div>', { lock: 1 });
       m.querySelector('#rTut').onclick = () => { closeModal(); B = null; stopBattleLoop(); startTutorial(); };
       m.querySelector('#rSkip').onclick = () => { closeModal(); B = null; stopBattleLoop(); endTutorial(); };
@@ -3528,50 +3912,49 @@ function showWinModal(gold, shards, got, cfg) {
 }
 
 /* ── HUD ── */
-function renderGems() {
-  const el = $('gemsEl'); if (!el || !B) return;
-  el.innerHTML = B.gems.map((g, i) => {
-    const cls = 'gem' + (B.sel.includes(i) ? ' sel' : '') + (B.usedGems[i] ? ' used' : '');
-    return '<div class="' + cls + '" data-i="' + i + '">' + gemSvg(g) + '<span>' + g.v + '</span></div>';
-  }).join('');
-  $$('.gem', el).forEach(e => {
-    e.onclick = () => {
-      if (!B || B.phase !== 'play') return;
-      const i = +e.dataset.i;
-      if (B.usedGems[i]) return;
-      SFX.gem();
-      const at = B.sel.indexOf(i);
-      if (at >= 0) B.sel.splice(at, 1); else { B.sel.push(i); if (B.sel.length > 2) B.sel.shift(); }
-      e.classList.add('pop'); setTimeout(() => e.classList.remove('pop'), 300);
-      renderHand(); renderGems();
-      if (typeof TUT !== 'undefined' && TUT.active) tutHook('gem');
-    };
-  });
+function renderMana() {
+  const el = $('manaEl'); if (!el || !B) return;
+  const p = B.player;
+  const total = Math.max(p.manaMax, p.mana);
+  let html = '<div class="orbs">';
+  for (let i = 0; i < total; i++) {
+    html += '<i class="orb' + (i < p.mana ? ' on' : '') + (i >= p.manaMax ? ' bonus' : '') + '"></i>';
+  }
+  html += '</div><div class="mnum"><b>' + p.mana + '</b><span>/' + p.manaMax + '</span> 마나</div>';
+  el.innerHTML = html;
 }
 function renderHand() {
   const el = $('handEl'); if (!el || !B) return;
-  const ready = cardsReady();
+  const mana = B.player.mana;
   el.innerHTML = '';
   B.hand.forEach((id, i) => {
     const c = CARD_BY[id]; if (!c) return;
-    const used = B.cardsUsedThisTurn[id] || 0;
-    const isReady = !!ready[id] && used < (c.uses || 1);
+    const cost = cardCost(c);
+    const ok = cost <= mana && B.phase === 'play';
     const d = document.createElement('div');
-    d.className = 'hcard ' + (isReady ? 'ready' : 'no');
+    d.className = 'hcard ' + (ok ? 'ready' : 'no');
     d.dataset.i = i;
     d.style.animation = 'cardUp .24s ' + (i * .03) + 's backwards';
     const cv = document.createElement('canvas'); cv.width = 220; cv.height = 300;
     d.appendChild(cv);
     const shine = document.createElement('div'); shine.className = 'shine'; d.appendChild(shine);
     const info = document.createElement('div'); info.className = 'hinfo'; info.textContent = c.name; d.appendChild(info);
-    const cond = document.createElement('div'); cond.className = 'hcond'; cond.textContent = condShort(c); d.appendChild(cond);
-    const uses = document.createElement('div'); uses.className = 'huses';
-    uses.textContent = used < (c.uses || 1) ? '×' + ((c.uses || 1) - used) : '0';
-    d.appendChild(uses);
+    const cost2 = document.createElement('div');
+    cost2.className = 'hcost c' + Math.min(5, cost);
+    cost2.textContent = cost;
+    d.appendChild(cost2);
+    const elc = document.createElement('div'); elc.className = 'helem';
+    elc.textContent = elData(c.el).icon;
+    elc.style.color = elData(c.el).col;
+    elc.title = elData(c.el).name;
+    d.appendChild(elc);
     const eff = document.createElement('div'); eff.className = 'heff'; eff.textContent = effShort(cardPower(c)); d.appendChild(eff);
     drawCardFace(cv, cardPower(c), { lv: cardLv(id), compact: true });
-    d.onclick = () => { if (!B || B.phase !== 'play') return; d.classList.add('fire'); setTimeout(() => useCardAt(i), 40); };
-    // 3D 틸트
+    d.onclick = () => {
+      if (!B || B.phase !== 'play') return;
+      if (!ok) { toast('마나가 부족해 · ' + cost + ' 필요'); SFX.gemBad(); return; }
+      d.classList.add('fire'); setTimeout(() => useCardAt(i), 40);
+    };
     d.addEventListener('pointermove', ev => {
       const r = d.getBoundingClientRect();
       const px = (ev.clientX - r.left) / r.width - .5, py = (ev.clientY - r.top) / r.height - .5;
@@ -3581,17 +3964,11 @@ function renderHand() {
     el.appendChild(d);
   });
 }
-function condShort(card) {
-  if (!card) return '';
-  if (card.cond === 'pair') return '합15';
-  if (card.cond === 'pairsq') return '같은숫자';
-  if (card.cond === 'pairsuit') return '같은모양';
-  return COND[card.cond] ? COND[card.cond].t : '?';
-}
+function condShort(card) { return '마나 ' + cardCost(card); }
 function effShort(c) {
   switch (c.eff) {
     case 'dmg': return '단일 ' + c.val;
-    case 'pierce': return '방어무시 ' + c.val;
+    case 'pierce': return '방무 ' + c.val;
     case 'multi': return c.val + '×' + (c.val >= 7 ? 3 : 2);
     case 'all': return '전체 ' + c.val;
     case 'block': return '방어 ' + c.val;
@@ -3599,9 +3976,9 @@ function effShort(c) {
     case 'heal': return '회복 ' + c.val;
     case 'drain': return c.val + ' 흡수';
     case 'poison': return '독 ' + c.val;
-    case 'stun': return c.val + '+지연';
+    case 'stun': return c.val + '+기절';
     case 'buff': return '공격 +' + c.val;
-    case 'reroll': return '리롤 ' + c.val;
+    case 'reroll': return '마나 +' + (c.val + 1);
     case 'gold': return '🪙' + c.val;
     case 'genesis': return c.val + '+드로우';
   }
@@ -3616,6 +3993,12 @@ function updateHud() {
     ring.setAttribute('stroke-dashoffset', String(175.9 * (1 - pct)));
     ring.setAttribute('stroke', pct > .5 ? '#5ce08a' : pct > .25 ? '#f5c96a' : '#ff5a6e');
   }
+  const od = $('odRing');
+  if (od) {
+    const k = clamp(p.od / 100, 0, 1);
+    od.setAttribute('stroke-dashoffset', String(213.6 * (1 - k)));
+    od.setAttribute('stroke', p.od >= 100 ? '#ffe9a8' : '#f5c96a');
+  }
   const hpNum = $('hpNum'); if (hpNum) hpNum.textContent = p.hp + '/' + p.maxhp;
   const port = $('portrait'); if (port) drawAvatar(port, CARD_BY[S.starter] || CARDS[0]);
   const bt = $('bTitle'); if (bt) bt.textContent = B.cfg.title;
@@ -3629,15 +4012,23 @@ function updateHud() {
     bs.textContent = parts.join(' · ');
   }
   const et = $('endTurn');
-  if (et) et.classList.toggle('pulse', B.phase === 'play' && !cardsReady2());
+  if (et) et.classList.toggle('pulse', B.phase === 'play' && !playableCards().length);
+  updateExBtn();
 }
-function cardsReady2() { return Object.keys(cardsReady()).length > 0; }
+function updateExBtn() {
+  const b = $('exBtn'); if (!b) return;
+  const od = B ? clamp(B.player.od, 0, 100) : 0;
+  b.style.setProperty('--od', od + '%');
+  const ready = !!(B && od >= 100 && B.phase === 'play');
+  b.classList.toggle('ready', ready);
+  const pc = b.querySelector('.expct'); if (pc) pc.textContent = Math.round(od) + '%';
+}
 function updateMuteBtn() {
   const b = $('btnMute');
   if (b) b.textContent = SFX.isMuted() ? '🔇' : '🔊';
 }
 
-/* ── 레이아웃 ── */
+/* ── 필드 레이아웃 / 입력 ── */
 window.fitField = function () {
   const cvs = $('field'), wrap = $('fieldWrap');
   if (!cvs || !wrap || !B) return;
@@ -3659,9 +4050,38 @@ function layoutFoes() {
     else { f.h = Math.min(H * .235, W * .17) * (f.boss ? 1.35 : 1); f.x = W * (.48 + i * .185); f.y = H * (.73 + (i % 2) * .09); }
   });
 }
+function bindFieldTap() {
+  const cvs = $('field'); if (!cvs) return;
+  cvs.onclick = ev => {
+    if (!B || B.phase === 'end') return;
+    const r = cvs.getBoundingClientRect();
+    if (r.width < 10) return;
+    const x = (ev.clientX - r.left) * (B.vw / r.width);
+    const y = (ev.clientY - r.top) * (B.vh / r.height);
+    let bestI = -1, bestD = 1e9;
+    B.foes.forEach((f, i) => {
+      if (f.hp <= 0) return;
+      const dx = Math.abs(x - f.x), dy = y - (f.y - f.h * .45);
+      if (dx < f.h * .44 && Math.abs(dy) < f.h * .5) {
+        const d = dx + Math.abs(dy) * .55;
+        if (d < bestD) { bestD = d; bestI = i; }
+      }
+    });
+    if (bestI >= 0) {
+      B.target = bestI;
+      const f = B.foes[bestI];
+      addRing(f.x, f.y - f.h * .45, '#ff5468', f.h * .2, f.h * .55, 460, 3);
+      addPop(f.x, f.y - f.h * .92, '🎯 TARGET', '#ff8a98', .95);
+      SFX.ui(); logMsg('🎯 ' + f.name + ' 지정');
+    }
+  };
+}
 
 /* ── 전투 렌더 ── */
-function stopBattleLoop() { if (battleRAF) { cancelAnimationFrame(battleRAF); battleRAF = null; } }
+function stopBattleLoop() {
+  if (battleRAF) { cancelAnimationFrame(battleRAF); battleRAF = null; }
+  if (B) { B.auto = false; clearTimeout(B.autoTimer); }
+}
 function battleLoop(t) {
   if (!B) { stopBattleLoop(); return; }
   if (curScreen === 'scrBattle') drawBattle(t);
@@ -3687,7 +4107,6 @@ function drawBattle(t) {
   // 배경
   const base = fieldBase(B.cfg.theme, W, H, dpr);
   g.drawImage(base, 0, 0, W, H);
-  // 안개/구름 이동
   const fogA = .06 + .03 * Math.sin(t * .0004);
   g.fillStyle = hexA((THEME_ART[B.cfg.theme] || THEME_ART.grass).fog, fogA);
   g.beginPath(); g.ellipse(W * .5 + Math.sin(t * .0002) * W * .1, H * .66, W * .75, H * .09, 0, 0, 7); g.fill();
@@ -3708,6 +4127,16 @@ function drawBattle(t) {
   const hp = heroPos();
   const heroCard = CARD_BY[S.starter] || CARDS[0];
   const heroH = Math.min(H * .36, W * .3);
+  // 타겟 링
+  const tgt = B.foes[B.target];
+  if (tgt && tgt.hp > 0) {
+    const tr = tgt.h * .34 + Math.sin(t * .005) * 3;
+    g.save(); g.translate(tgt.x, tgt.y); g.scale(1, .42);
+    g.strokeStyle = hexA('#ff5468', .5 + .22 * Math.sin(t * .006)); g.lineWidth = 3;
+    g.setLineDash([8, 7]); g.lineDashOffset = -t * .02;
+    g.beginPath(); g.arc(0, 0, tr, 0, 7); g.stroke(); g.setLineDash([]);
+    g.restore();
+  }
   // 히어로 그림자
   g.fillStyle = 'rgba(0,0,0,.38)';
   g.beginPath(); g.ellipse(hp.x, hp.y + 2, heroH * .26, heroH * .07, 0, 0, 7); g.fill();
@@ -3775,11 +4204,31 @@ function drawBattle(t) {
     drawCreature(g, f.kind, f.x + lunge + knock, f.y, f.h, { t: t, boss: f.boss, elite: f.elite, flash: Math.max(0, f.flash), phase: f.phase });
     g.restore();
     if (dead) return;
+    // 브레이크 표시
+    if (f.broken) {
+      const rr2 = f.h * .3 + Math.sin(t * .006) * 2;
+      g.save();
+      g.translate(f.x, f.y - f.h * .45);
+      g.globalAlpha = .5 + .3 * Math.sin(t * .01);
+      g.strokeStyle = '#ffe08a'; g.lineWidth = 2.4;
+      g.shadowColor = '#ffb020'; g.shadowBlur = 14;
+      g.setLineDash([9, 7]); g.lineDashOffset = t * .03;
+      g.beginPath(); g.arc(0, 0, rr2, 0, 7); g.stroke();
+      g.setLineDash([]);
+      g.globalAlpha = 1;
+      g.fillStyle = '#ffe9a8'; g.textAlign = 'center';
+      g.font = '900 ' + Math.max(9, H * .022) + 'px ' + FONT;
+      g.fillText('BREAK', 0, -rr2 - 7);
+      g.restore();
+    }
     // 이름 + HP 바
-    const maxW = B.foes.length >= 3 ? W * .2 : B.foes.length === 2 ? W * .23 : W * .38;
-    const bw = Math.max(44, Math.min(f.h * .72, maxW)), bx = f.x + lunge - bw / 2, by = f.y - f.h * (f.top + .14) + (i % 2 ? 4 : 0);
+    const maxW = B.foes.length >= 3 ? W * .25 : B.foes.length === 2 ? W * .27 : W * .44;
+    const bw = Math.max(88, Math.min(f.h * .95, maxW)), bx = f.x + lunge - bw / 2, by = f.y - f.h * (f.top + .14) + (i % 2 ? 4 : 0);
+    const plateH = 40;
     g.save();
-    g.fillStyle = 'rgba(3,2,8,.62)'; rr(g, bx - 5, by - 4, bw + 10, 25, 7); g.fill();
+    g.fillStyle = 'rgba(3,2,8,.66)'; rr(g, bx - 5, by - 4, bw + 10, plateH, 7); g.fill();
+    g.strokeStyle = f.broken ? hexA('#ffe08a', .7) : 'rgba(255,255,255,.08)'; g.lineWidth = 1;
+    rr(g, bx - 5, by - 4, bw + 10, plateH, 7); g.stroke();
     g.fillStyle = f.boss ? '#ffd0a0' : '#f2eaff';
     g.font = '800 ' + Math.max(8.5, H * .023) + 'px ' + FONT; g.textAlign = 'center';
     g.fillText(f.name + (f.boss ? ' ☠' : ''), f.x + lunge, by + 7, bw + 6);
@@ -3789,6 +4238,29 @@ function drawBattle(t) {
     g.fillStyle = barCol; g.fillRect(bx, by + 12, bw * pct, 6);
     g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(bx, by + 12, bw * pct, 2);
     g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = .8; g.strokeRect(bx, by + 12, bw, 6);
+    // 실드 핍
+    const py = by + 25;
+    g.textAlign = 'left';
+    for (let s = 0; s < f.shieldMax; s++) {
+      const px = bx + 5 + s * 9;
+      g.save(); g.translate(px, py + 4); g.rotate(Math.PI / 4);
+      g.fillStyle = s < f.shield ? '#7fd4ff' : 'rgba(120,150,180,.2)';
+      g.fillRect(-3.1, -3.1, 6.2, 6.2);
+      if (s < f.shield) { g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(-1.2, -1.2, 2.4, 2.4); }
+      g.restore();
+    }
+    // 약점 속성 칩
+    let wx = bx + 5 + f.shieldMax * 9 + 6;
+    g.font = '900 ' + Math.max(7, H * .017) + 'px ' + FONT;
+    f.weak.forEach(el => {
+      const E = elData(el);
+      const tw = g.measureText(E.name).width + 9;
+      if (wx + tw > bx + bw + 2) return;
+      g.fillStyle = hexA(E.col, .2); rr(g, wx, py, tw, 13, 3.5); g.fill();
+      g.strokeStyle = hexA(E.col, .8); g.lineWidth = .8; rr(g, wx, py, tw, 13, 3.5); g.stroke();
+      g.fillStyle = E.col; g.fillText(E.name, wx + 4.5, py + 9.4);
+      wx += tw + 3;
+    });
     g.restore();
     // 예고
     if (f.pendingAct) {
@@ -3944,11 +4416,8 @@ function drawBattle(t) {
     g.fillStyle = hexA('#ff2030', B.hero.flash * .18);
     g.fillRect(0, 0, W, H);
   }
-  if (typeof TUT !== 'undefined' && TUT.active) { /* 가이드는 DOM */ }
 }
-const FONT = '"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
 
-/* ===== 06-gacha.js ===== */
 /* ══════════════ 06 · 소환 연출 (가챠 시네마틱) ══════════════ */
 const Gacha = {
   active: false, stage: '', n: 0, got: [], opts: {}, revealed: 0, maxOrder: 0,
@@ -4441,7 +4910,7 @@ function initStarter() {
     const role = document.createElement('div'); role.className = 'role'; role.textContent = c.rare + ' · ' + roles[id]; d.appendChild(role);
     const sk = document.createElement('div'); sk.className = 'sk'; sk.textContent = c.desc; d.appendChild(sk);
     const tags = document.createElement('div'); tags.className = 'tags';
-    tags.innerHTML = '<span class="tag">' + condLabel(c) + '</span><span class="tag">×' + c.uses + '</span><span class="tag">' + (c.el || '') + '</span>';
+    tags.innerHTML = '<span class="tag">마나 ' + cardCost(c) + '</span><span class="tag">' + elData(c.el).name + '</span><span class="tag">' + c.rare + '</span>';
     d.appendChild(tags);
     drawCardFace(cv, c, { lv: 1 });
     d.onclick = () => {
@@ -4483,12 +4952,12 @@ function initNick() {
 const TUT = {
   active: false, step: 0, timer: null,
   steps: [
-    { msg: '이게 <b>전투 화면</b>이야.<br>위는 전장, 아래는 <b>카드 핸드</b>와 <b>젬 트레이</b>.', need: null, auto: 3600 },
-    { msg: '아래 <b>젬</b> 하나를 눌러봐!<br>색과 숫자가 카드 조건이 돼. <span class="finger">👆</span>', need: 'gem' },
-    { msg: '<b>금테</b>로 빛나는 카드는 지금 낼 수 있어.<br>눌러서 스킬을 터뜨려! <span class="finger">👆</span>', need: 'card' },
-    { msg: '카드를 쓰면 <b>젬이 소모</b>돼.<br>손이 비거나 젬을 다 쓰면 턴이 넘어가.', need: null, auto: 3600 },
-    { msg: '오른쪽 아래 <b>▶ 버튼</b>으로 턴을 넘길 수 있어.<br>한 번 눌러봐! <span class="finger">👆</span>', need: 'end' },
-    { msg: '적 머리 위 <b>예고 띠</b>를 봐 — ⚔면 공격이 온다!<br>방어 카드로 막으면 피해를 0으로 만들 수 있어.', need: null, auto: 4400 },
+    { msg: '여기가 <b>전투 화면</b>이야.<br>아래 <b>파란 마나 크리스탈</b>과 <b>카드</b>로 싸운다.', need: null, auto: 3600 },
+    { msg: '<b>금테</b>로 빛나는 카드를 눌러봐!<br>카드 좌상단 숫자는 <b>마나 코스트</b>야. <span class="finger">👆</span>', need: 'card' },
+    { msg: '적 이름 아래 <b>약점 속성</b>과 <b>실드</b> 칸을 봐.<br>약점 카드로 때리면 실드가 하나씩 깨져.', need: null, auto: 4400 },
+    { msg: '실드를 다 깨면 <b>BREAK!</b><br>적이 기절하고 받는 피해가 <b>1.5배</b>가 돼.', need: null, auto: 4400 },
+    { msg: '한 턴에 카드를 이어 쓰면 <b>CHAIN</b> — 피해 <b>+15%</b>씩 증폭!<br>속성 조합은 <b>콤보</b>까지 터져.', need: null, auto: 4800 },
+    { msg: '오른쪽 아래 <b>▶</b>로 턴을 넘겨.<br>적 예고 ⚔를 보고 방어 카드를 챙겨! <span class="finger">👆</span>', need: 'end' },
     { msg: '완벽해. 이제 <b>스타터팩</b>을 열러 가자!', need: null, auto: 2200 }
   ],
   clearTimer() { if (this.timer) { clearTimeout(this.timer); this.timer = null; } }
@@ -4499,7 +4968,8 @@ function startTutorial() {
   const skip = $('btnTutSkip'); if (skip) skip.style.display = 'block';
   newBattle({
     title: '튜토리얼 · 첫 싸움', chLabel: '프롤로그', theme: 'grass',
-    foes: [{ kind: 'slime', hp: 20, atkT: 1, tele: 2 }],
+    foes: [{ kind: 'slime', name: '연습 슬라임', hp: 36, tele: 2, shieldMax: 2,
+      weak: ['fire', 'ice', 'bolt', 'shadow', 'holy', 'earth', 'nature', 'wind', 'arcane'] }],
     baseHp: 60, baseAtk: 4, gold: 0, shards: 0, playerHp: 80, tut: true, after: 'lobby'
   });
   battleRAF = requestAnimationFrame(battleLoop);
@@ -4733,7 +5203,7 @@ function renderArena() {
   const tier = clamp(S.arenaTier || 0, 0, TIERS.length - 1);
   arenaTierSel = clamp(arenaTierSel, 0, TIERS.length - 1);
   let html = '<div class="panel"><h2>⚔️ 아레나 1:1 <span class="sub">RANKED</span></h2>' +
-    '<p class="hint">같은 젬·카드 룰로 싸우는 라이벌. 승리하면 랭킹 포인트와 보상, 패배하면 포인트 일부를 잃어.</p>' +
+    '<p class="hint">같은 마나·카드 룰로 싸우는 라이벌. 승리하면 랭킹 포인트와 보상, 패배하면 포인트 일부를 잃어.</p>' +
     '<div class="stat-row"><span class="stat">🏆 <b>' + S.arenaPts + 'pt</b></span><span class="stat">' + S.arenaWins + '승 ' + S.arenaLoses + '패</span>' +
     '<span class="stat">등급 <b style="color:var(--gold2)">' + TIERS[tier] + '</b></span>' +
     '<span class="stat">덱 파워 <b>' + deckPower() + '</b></span></div>' +
@@ -4880,8 +5350,8 @@ function showCardDetail(id) {
     '<p class="center" style="margin-bottom:8px">' + esc(c.desc) + '</p>' +
     '<div class="stat-row" style="justify-content:center">' +
     '<span class="stat" style="color:' + R.color + '">' + c.rare + '</span>' +
-    '<span class="stat">조건 <b>' + condLabel(c) + '</b></span>' +
-    '<span class="stat">턴당 <b>×' + c.uses + '</b></span>' +
+    '<span class="stat">코스트 <b>' + cardCost(c) + '</b></span>' +
+    '<span class="stat">속성 <b style="color:' + elData(c.el).col + '">' + elData(c.el).name + '</b></span>' +
     '<span class="stat">Lv.<b>' + lv + '</b></span>' +
     '<span class="stat">보유 <b>×' + own + '</b></span>' +
     '</div>' +
@@ -5099,6 +5569,12 @@ function boot() {
     SFX.ui();
     if (TUT.active) tutHook('end');
     endTurn();
+  };
+  $('btnAuto').onclick = () => { SFX.ui(); toggleAuto(); };
+  $('exBtn').onclick = () => {
+    if (!B || B.phase !== 'play') return;
+    if (B.player.od < 100) { toast('오버드라이브 ' + Math.round(B.player.od) + '% · 100%에 발동'); SFX.gemBad(); return; }
+    SFX.gold(); fireEX();
   };
   $('btnTutSkip').onclick = () => { if (confirm2('튜토리얼을 건너뛰고 스타터팩을 받을까?')) endTutorial(); };
   // 리사이즈
