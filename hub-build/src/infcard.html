@@ -42,7 +42,7 @@ canvas{display:block}
 #bgFx canvas{width:100%;height:100%;opacity:.85}
 #bgFx::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%)}
 
-#app{position:relative;width:100%;height:100%;overflow:hidden;z-index:1}
+#app{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;z-index:1}
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .26s ease}
 .screen.on{opacity:1;pointer-events:auto}
 
@@ -85,7 +85,7 @@ canvas{display:block}
 .nowrap{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ════════════════ 2 · 타이틀 ════════════════ */
-#scrTitle{align-items:center;justify-content:center;text-align:center;padding:26px 22px 40px;gap:4px;position:relative}
+#scrTitle{align-items:center;justify-content:center;text-align:center;padding:26px 22px 40px;gap:4px}
 .title-emblem{position:relative;width:min(300px,74vw);height:min(300px,74vw);margin-bottom:-8px;display:flex;align-items:center;justify-content:center}
 .title-emblem>canvas{position:absolute;inset:0;width:100%;height:100%}
 .title-emblem .tc{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg)}
@@ -523,7 +523,7 @@ canvas{display:block}
 
 /* ════════════════ 8 · 반응형 ════════════════ */
 @media (min-width:720px){
-  #app{max-width:1180px;margin:0 auto;box-shadow:0 0 120px rgba(0,0,0,.85)}
+  #app{max-width:1180px;margin:0 auto;left:0;right:0;box-shadow:0 0 120px rgba(0,0,0,.85)}
   body{background:#05030b}
   .b-hand{gap:8px;padding:10px 14px 7px;max-width:820px;margin:0 auto;width:100%}
   .hcard .hinfo{font-size:9.5px;padding:14px 2px 4px}
