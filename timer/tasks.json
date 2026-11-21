@@ -1,9 +1,21 @@
 {
-  "generated_at": "2026-11-21T15:37:13+09:00",
-  "generated_at_kst": "2026-11-21 15:37 KST",
+  "generated_at": "2026-11-21T15:38:46+09:00",
+  "generated_at_kst": "2026-11-21 15:38 KST",
   "source": "클로버 작업 기록",
-  "count": 51,
+  "count": 52,
   "tasks": [
+    {
+      "id": "h20261121-3683ebbc",
+      "title": "⏱️ 클로버 작업 타이머 웹 앱 제작 및 배포",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-21 15:24",
+      "finished_kst": "2026-11-21 15:38",
+      "elapsed_seconds": 829,
+      "elapsed_text": "13분 49초",
+      "summary": "'⏱️ 클로버 작업 타이머 웹 앱 제작 및 배포' 작업을 진행해 마무리한 기록.",
+      "source": "handoff"
+    },
     {
       "id": "h20261121-3ea7e81b",
       "title": "☀️ 모닝 스캔",
