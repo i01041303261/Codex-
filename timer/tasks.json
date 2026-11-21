@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-11-21T15:25:46+09:00",
-  "generated_at_kst": "2026-11-21 15:25 KST",
-  "source": "handoffs/*/meta.json",
-  "count": 50,
+  "generated_at": "2026-11-21T15:37:13+09:00",
+  "generated_at_kst": "2026-11-21 15:37 KST",
+  "source": "클로버 작업 기록",
+  "count": 51,
   "tasks": [
     {
       "id": "h20261121-3ea7e81b",
@@ -158,6 +158,18 @@
       "elapsed_seconds": 166,
       "elapsed_text": "2분 46초",
       "summary": "매일 아침 로블록스 추천이 실제 플레이 기록을 먼저 분석하도록 개선.",
+      "source": "handoff"
+    },
+    {
+      "id": "h20261119-cc64ca4d",
+      "title": "🎮 플레이 기록 분석 후 맞춤 로블록스 추천",
+      "category": "로블록스",
+      "state": "canceled",
+      "started_kst": "2026-11-19 18:31",
+      "finished_kst": "2026-11-19 18:35",
+      "elapsed_seconds": 286,
+      "elapsed_text": "4분 46초",
+      "summary": "정기 추천을 분석형으로 바꾸려던 첫 시도가 취소되어 별도 작업으로 다시 진행.",
       "source": "handoff"
     },
     {
