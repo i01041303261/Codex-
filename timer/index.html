@@ -200,7 +200,7 @@
   }
   .stat:hover{border-color:rgba(52,211,153,.3);transform:translateY(-2px)}
   .stat .k{font-size:.72rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
-  .stat .v{font-size:1.42rem;font-weight:800;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f0fbf6}
+  .stat .v{font-size:1.42rem;font-weight:800;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f0fbf6;word-break:keep-all}
   .stat .v em{font-style:normal;font-size:.82rem;font-weight:700;color:var(--muted);margin-left:2px}
   .stat .v.small{font-size:.95rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
   .stat .v .em{color:var(--em)}
@@ -305,15 +305,16 @@
     header.top{gap:12px;margin-bottom:18px}
     .logo{width:48px;height:48px;flex-basis:48px;border-radius:15px;font-size:23px}
     .brand p{font-size:.78rem}
-    .clock{padding:8px 12px}
+    .clock{padding:9px 13px;width:100%;display:flex;align-items:baseline;justify-content:space-between;gap:10px;text-align:left}
     .clock .t{font-size:1.05rem}
     .panel{padding:17px 15px;border-radius:17px}
     .row2{grid-template-columns:1fr 1fr;gap:9px}
     .actions{grid-template-columns:1fr 1fr;gap:9px}
     .btn{font-size:.83rem;padding:12px 8px}
     .stat{padding:13px 14px}
-    .stat .v{font-size:1.18rem}
-    .stat .v.small{font-size:.86rem}
+    .stat .v{font-size:1.1rem;line-height:1.35}
+    .stat .v em{font-size:.74rem}
+    .stat .v.small{font-size:.84rem}
     .card{padding:14px 14px 13px 17px}
     .card .dur b{font-size:1.32rem}
     .when{width:100%;margin-left:0;order:9}
