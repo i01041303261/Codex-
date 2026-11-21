@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>🍀 클로버 작업 타이머 &amp; 기록 보드</title>
+<meta name="description" content="클로버가 오래 걸리는 작업을 할 때 시작·완료 시각과 작업 내용을 기록하고, 몇 분 몇 초 걸렸는지 바로 확인하는 타이머 보드.">
+<meta name="theme-color" content="#08130f">
+<meta property="og:title" content="🍀 클로버 작업 타이머 & 기록 보드">
+<meta property="og:description" content="긴 작업은 얼마나 걸렸을까? 시작·완료 시각과 소요 시간을 자동으로 기록해.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230b1f18'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%2334d399'%3E%E3%85%8D%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#07110d;
+    --bg2:#0a1a14;
+    --card:rgba(14,32,25,.82);
+    --card-2:rgba(10,24,19,.72);
+    --line:rgba(52,211,153,.16);
+    --line-2:rgba(255,255,255,.07);
+    --txt:#e7f5ee;
+    --muted:#8ba79b;
+    --em:#34d399;
+    --em-d:#10b981;
+    --em-deep:#059669;
+    --amber:#fbbf24;
+    --rose:#fb7185;
+    --sky:#60a5fa;
+    --violet:#a78bfa;
+    --radius:20px;
+    --shadow:0 18px 50px -22px rgba(0,0,0,.85);
+    --font:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--font);
+    background:
+      radial-gradient(1100px 620px at 82% -12%, rgba(16,185,129,.20), transparent 62%),
+      radial-gradient(760px 520px at 6% 4%, rgba(52,211,153,.10), transparent 60%),
+      radial-gradient(900px 600px at 50% 110%, rgba(5,150,105,.12), transparent 65%),
+      linear-gradient(180deg,#07110d 0%, #06100c 45%, #050d0a 100%);
+    color:var(--txt);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:
+      linear-gradient(rgba(52,211,153,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(52,211,153,.045) 1px, transparent 1px);
+    background-size:52px 52px;
+    mask-image:radial-gradient(circle at 50% 20%, #000 0%, transparent 78%);
+    -webkit-mask-image:radial-gradient(circle at 50% 20%, #000 0%, transparent 78%);
+  }
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:26px 20px 64px}
+
+  /* ---------- header ---------- */
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0}
+  .logo{
+    width:56px;height:56px;flex:0 0 56px;border-radius:18px;display:grid;place-items:center;position:relative;
+    background:linear-gradient(150deg, rgba(52,211,153,.28), rgba(5,150,105,.08));
+    border:1px solid rgba(52,211,153,.4);
+    box-shadow:0 0 0 1px rgba(0,0,0,.3) inset, 0 10px 30px -12px rgba(52,211,153,.7);
+    font-size:27px;
+  }
+  .logo span.mark{
+    position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;
+    background:#07110d;border:1px solid rgba(52,211,153,.45);color:var(--em);
+    font-size:12px;font-weight:800;display:grid;place-items:center;
+  }
+  .brand h1{font-size:clamp(1.28rem,2.4vw,1.7rem);margin:0;letter-spacing:-.02em;line-height:1.25}
+  .brand h1 em{font-style:normal;color:var(--em)}
+  .brand p{margin:3px 0 0;color:var(--muted);font-size:.86rem}
+  .clock{
+    text-align:right;padding:10px 16px;border-radius:14px;
+    background:var(--card-2);border:1px solid var(--line);backdrop-filter:blur(8px);
+    font-variant-numeric:tabular-nums;flex:0 0 auto;
+  }
+  .clock .d{display:block;font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+  .clock .t{display:block;font-size:1.22rem;font-weight:800;color:var(--em)}
+  .clock .t small{font-size:.62rem;font-weight:600;color:var(--muted);margin-left:4px}
+
+  /* ---------- panels ---------- */
+  .panel{
+    background:linear-gradient(165deg, rgba(17,38,30,.92), rgba(8,20,16,.94));
+    border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px;
+    position:relative;overflow:hidden;
+  }
+  .panel::after{
+    content:"";position:absolute;inset:0 0 auto;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(52,211,153,.55),transparent);
+  }
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .panel-head h2{margin:0;font-size:1.02rem;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+  .soft{
+    font-size:.72rem;font-weight:700;padding:4px 11px;border-radius:999px;
+    background:rgba(52,211,153,.10);color:var(--em);border:1px solid rgba(52,211,153,.28);
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .soft.run{color:#fff;background:rgba(16,185,129,.22);border-color:rgba(52,211,153,.6)}
+  .soft.run::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--em);animation:pulse 1.3s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+
+  /* ---------- timer ---------- */
+  .timer-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:22px;align-items:start}
+  .timer-left{min-width:0}
+  .timer-display{
+    font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:-.03em;
+    font-size:clamp(2.6rem,7.6vw,4rem);line-height:1.05;
+    background:linear-gradient(180deg,#f2fff9,#66e2b4 55%,#10b981);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 6px 22px rgba(16,185,129,.22));
+    transition:opacity .2s;
+  }
+  .timer-display.idle{background:linear-gradient(180deg,#dbe9e3,#5d7a6f);-webkit-background-clip:text;background-clip:text;filter:none}
+  .timer-sub{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.8rem;margin-top:6px;min-height:18px}
+  .timer-sub b{color:#cfe9de;font-weight:700}
+  .bar{position:relative;height:9px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:16px;overflow:hidden;border:1px solid rgba(255,255,255,.05)}
+  .bar i{
+    position:absolute;inset:0 auto 0 0;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,#059669,#34d399);
+    box-shadow:0 0 16px rgba(52,211,153,.55);
+    transition:width .35s ease;
+  }
+  .bar.warn i{background:linear-gradient(90deg,#d97706,#fbbf24);box-shadow:0 0 18px rgba(251,191,36,.5)}
+  .bar.idle i{width:32%;background:linear-gradient(90deg,rgba(52,211,153,.05),rgba(52,211,153,.35),rgba(52,211,153,.05));animation:slide 2.4s linear infinite}
+  @keyframes slide{0%{left:-32%}100%{left:100%}}
+  .barlabel{display:flex;justify-content:space-between;gap:10px;margin-top:7px;font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+  .warnbadge{
+    margin-top:14px;display:none;align-items:center;gap:9px;
+    padding:11px 14px;border-radius:13px;font-size:.86rem;font-weight:700;
+    color:#ffe6a8;background:linear-gradient(100deg,rgba(251,191,36,.16),rgba(251,191,36,.05));
+    border:1px solid rgba(251,191,36,.42);
+    animation:glow 1.8s ease-in-out infinite;
+  }
+  .warnbadge.show{display:flex}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}50%{box-shadow:0 0 22px -4px rgba(251,191,36,.45)}}
+
+  .form{display:grid;gap:12px}
+  .field{display:grid;gap:6px;min-width:0}
+  .field > span{font-size:.74rem;font-weight:700;color:#9dbbaf;letter-spacing:.02em}
+  input,select{
+    width:100%;font-family:inherit;font-size:.92rem;color:var(--txt);
+    background:rgba(4,12,9,.72);border:1px solid rgba(255,255,255,.1);
+    border-radius:11px;padding:11px 13px;outline:none;transition:border-color .15s,box-shadow .15s;
+    appearance:none;-webkit-appearance:none;
+  }
+  select{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2334d399' stroke-width='2'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;
+  }
+  input::placeholder{color:#5f7a70}
+  input:focus,select:focus{border-color:rgba(52,211,153,.65);box-shadow:0 0 0 3px rgba(52,211,153,.12)}
+  input:disabled,select:disabled{opacity:.55;cursor:not-allowed}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
+  .btn{
+    font-family:inherit;font-size:.9rem;font-weight:800;letter-spacing:-.01em;
+    border-radius:12px;padding:12px 14px;border:1px solid transparent;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    transition:transform .12s, filter .15s, background .15s, border-color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:translateY(1px) scale(.995)}
+  .btn.primary{background:linear-gradient(140deg,#34d399,#059669);color:#04130d;box-shadow:0 10px 24px -12px rgba(52,211,153,.9)}
+  .btn.primary:hover{filter:brightness(1.07)}
+  .btn.stop{background:rgba(251,113,133,.10);color:#ffd6dc;border-color:rgba(251,113,133,.4)}
+  .btn.stop:hover{background:rgba(251,113,133,.18)}
+  .btn.stop:disabled{opacity:.42;cursor:not-allowed;filter:none}
+  .btn.ghost{background:rgba(52,211,153,.08);color:var(--em);border-color:rgba(52,211,153,.32);font-size:.82rem;padding:9px 13px}
+  .btn.ghost:hover{background:rgba(52,211,153,.16)}
+  .hint{margin:0;font-size:.74rem;color:#6f8b80;line-height:1.5}
+
+  /* ---------- report ---------- */
+  .report{
+    margin-top:18px;border-radius:16px;padding:16px 18px;
+    background:linear-gradient(120deg, rgba(52,211,153,.14), rgba(52,211,153,.03));
+    border:1px solid rgba(52,211,153,.34);
+    display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    animation:rise .35s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .report .rp-k{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--em);text-transform:uppercase}
+  .report p{margin:4px 0 0;font-size:.98rem;font-weight:700;line-height:1.55;word-break:keep-all}
+  .report p b{color:var(--em)}
+  .report .btn{flex:0 0 auto}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}
+  .stat{
+    background:linear-gradient(165deg, rgba(16,36,28,.9), rgba(8,19,15,.92));
+    border:1px solid var(--line-2);border-radius:16px;padding:16px 17px;min-width:0;
+    position:relative;overflow:hidden;transition:border-color .2s,transform .2s;
+  }
+  .stat:hover{border-color:rgba(52,211,153,.3);transform:translateY(-2px)}
+  .stat .k{font-size:.72rem;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+  .stat .v{font-size:1.42rem;font-weight:800;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#f0fbf6}
+  .stat .v em{font-style:normal;font-size:.82rem;font-weight:700;color:var(--muted);margin-left:2px}
+  .stat .v.small{font-size:.95rem;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all}
+  .stat .v .em{color:var(--em)}
+  .stat::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--em),transparent)}
+
+  /* ---------- records ---------- */
+  .records-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:6px 0 14px;flex-wrap:wrap}
+  .records-head h2{margin:0;font-size:1.06rem;display:flex;align-items:center;gap:8px}
+  .records-head h2 .cnt{font-size:.74rem;font-weight:700;color:var(--muted)}
+  .search{position:relative;flex:0 1 280px;min-width:170px}
+  .search input{padding-left:34px;font-size:.84rem;padding-top:9px;padding-bottom:9px;border-radius:99px}
+  .search::before{content:"🔎";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.8rem;opacity:.7}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .chip{
+    font-family:inherit;font-size:.79rem;font-weight:700;cursor:pointer;
+    padding:7px 13px;border-radius:99px;color:#a9c4b8;
+    background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+    display:inline-flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .chip:hover{color:#dff6ec;border-color:rgba(52,211,153,.3)}
+  .chip .n{font-size:.68rem;opacity:.75;font-variant-numeric:tabular-nums}
+  .chip.on{color:#04130d;background:linear-gradient(140deg,#4ade80,#10b981);border-color:transparent;box-shadow:0 8px 20px -12px rgba(52,211,153,.9)}
+
+  .timeline{display:grid;gap:12px}
+  .card{
+    position:relative;padding:16px 18px 15px 20px;border-radius:15px;
+    background:linear-gradient(160deg, rgba(15,33,26,.88), rgba(8,19,15,.9));
+    border:1px solid var(--line-2);
+    transition:border-color .18s, box-shadow .18s, transform .18s;
+    animation:rise .3s ease both;
+  }
+  .card:hover{border-color:rgba(52,211,153,.3);box-shadow:0 16px 34px -24px rgba(0,0,0,.9);transform:translateY(-1px)}
+  .card::before{
+    content:"";position:absolute;left:0;top:16px;bottom:16px;width:3px;border-radius:0 3px 3px 0;
+    background:linear-gradient(180deg,#34d399,rgba(52,211,153,.05));
+  }
+  .card.cat-roblox::before{background:linear-gradient(180deg,#60a5fa,rgba(96,165,250,.05))}
+  .card.cat-doc::before{background:linear-gradient(180deg,#a78bfa,rgba(167,139,250,.05))}
+  .card.cat-check::before{background:linear-gradient(180deg,#fbbf24,rgba(251,191,36,.05))}
+  .card.pending::before{background:linear-gradient(180deg,#fbbf24,rgba(251,191,36,.05))}
+  .card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+  .tag{font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.01em;white-space:nowrap}
+  .tag.game{color:#6ee7b7;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25)}
+  .tag.roblox{color:#93c5fd;background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.25)}
+  .tag.doc{color:#c4b5fd;background:rgba(167,139,250,.13);border:1px solid rgba(167,139,250,.25)}
+  .tag.check{color:#fcd34d;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.25)}
+  .tag.manual{color:#e2e8f0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13)}
+  .tag.state{color:#9fb8ac;background:transparent;border:1px solid rgba(255,255,255,.12)}
+  .tag.state.done{color:#6ee7b7;border-color:rgba(52,211,153,.3)}
+  .tag.state.canceled{color:#fda4af;border-color:rgba(251,113,133,.32)}
+  .tag.state.running{color:#fcd34d;border-color:rgba(251,191,36,.32)}
+  .when{margin-left:auto;font-size:.72rem;color:#728d82;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .card h3{margin:0;font-size:.99rem;font-weight:800;letter-spacing:-.01em;line-height:1.4;word-break:keep-all}
+  .card .dur{
+    display:flex;align-items:baseline;gap:3px;flex-wrap:wrap;
+    margin:9px 0 7px;font-size:.86rem;color:#a8c4b8;font-variant-numeric:tabular-nums;
+  }
+  .card .dur b{font-size:1.5rem;color:#5eead4;font-weight:800;letter-spacing:-.02em;line-height:1;margin-right:1px}
+  .card .dur .u{margin-right:8px;font-size:.76rem;color:#87a397;font-weight:700}
+  .card .dur .lt{margin-left:auto;font-size:.7rem;color:#5d7a6e;letter-spacing:.03em;font-weight:600}
+  .card p{margin:0;font-size:.82rem;color:#93b1a4;line-height:1.6;word-break:keep-all}
+  .card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding-top:11px;border-top:1px dashed rgba(255,255,255,.07);flex-wrap:wrap}
+  .card-foot .range{font-size:.71rem;color:#6c877c;font-variant-numeric:tabular-nums}
+  .mini{
+    font-family:inherit;font-size:.74rem;font-weight:800;cursor:pointer;
+    padding:7px 11px;border-radius:9px;color:var(--em);
+    background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.26);
+    display:inline-flex;align-items:center;gap:5px;transition:.15s;
+  }
+  .mini:hover{background:rgba(52,211,153,.17)}
+  .mini.del{color:#fda4af;background:rgba(251,113,133,.07);border-color:rgba(251,113,133,.22);padding:7px 10px}
+  .mini.del:hover{background:rgba(251,113,133,.16)}
+  .empty{
+    text-align:center;color:#6c877c;font-size:.86rem;padding:44px 16px;
+    border:1px dashed rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.015);
+  }
+  .notice{
+    margin-bottom:14px;font-size:.78rem;color:#fcd34d;background:rgba(251,191,36,.08);
+    border:1px solid rgba(251,191,36,.25);border-radius:11px;padding:10px 13px;
+  }
+  .notice[hidden]{display:none}
+
+  footer{margin-top:34px;text-align:center;color:#547063;font-size:.74rem;line-height:1.7}
+  footer b{color:#7fa094}
+
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+    background:linear-gradient(140deg,#0f2b21,#0a1c15);border:1px solid rgba(52,211,153,.42);
+    color:#dff7ec;font-size:.84rem;font-weight:700;padding:11px 18px;border-radius:12px;
+    box-shadow:0 18px 40px -18px #000;opacity:0;pointer-events:none;transition:.22s;z-index:50;
+    max-width:calc(100vw - 40px);text-align:center;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:900px){
+    .timer-grid{grid-template-columns:1fr;gap:20px}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:560px){
+    .wrap{padding:18px 14px 54px}
+    header.top{gap:12px;margin-bottom:18px}
+    .logo{width:48px;height:48px;flex-basis:48px;border-radius:15px;font-size:23px}
+    .brand p{font-size:.78rem}
+    .clock{padding:8px 12px}
+    .clock .t{font-size:1.05rem}
+    .panel{padding:17px 15px;border-radius:17px}
+    .row2{grid-template-columns:1fr 1fr;gap:9px}
+    .actions{grid-template-columns:1fr 1fr;gap:9px}
+    .btn{font-size:.83rem;padding:12px 8px}
+    .stat{padding:13px 14px}
+    .stat .v{font-size:1.18rem}
+    .stat .v.small{font-size:.86rem}
+    .card{padding:14px 14px 13px 17px}
+    .card .dur b{font-size:1.32rem}
+    .when{width:100%;margin-left:0;order:9}
+    .search{flex:1 1 100%}
+    .report{padding:14px}
+    .report .btn{width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🍀<span class="mark">ㅍ</span></div>
+      <div>
+        <h1>클로버 <em>작업 타이머</em></h1>
+        <p>긴 작업은 얼마나 걸렸는지, 시작부터 완료까지 자동으로 기록해</p>
+      </div>
+    </div>
+    <div class="clock" aria-label="현재 한국 시간">
+      <span class="d" id="clockDate">불러오는 중</span>
+      <span class="t" id="clockTime">--:--:--<small>KST</small></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- 실시간 타이머 -->
+    <section class="panel" aria-labelledby="timerTitle">
+      <div class="panel-head">
+        <h2 id="timerTitle">⏱️ 지금 하는 작업</h2>
+        <span class="soft" id="stateBadge">대기 중</span>
+      </div>
+
+      <div class="timer-grid">
+        <div class="timer-left">
+          <div class="timer-display idle" id="timerDisplay" aria-live="off">00분 00초</div>
+          <div class="timer-sub" id="timerSub">작업을 시작하면 여기서 시간이 흘러</div>
+
+          <div class="bar idle" id="bar"><i id="barFill"></i></div>
+          <div class="barlabel">
+            <span id="barLeft">예상 시간을 넣으면 진행률이 보여</span>
+            <span id="barRight">—</span>
+          </div>
+
+          <div class="warnbadge" id="warnBadge" role="status">⏰ 다 끝나가요! 마무리 보고 준비</div>
+        </div>
+
+        <div class="form">
+          <label class="field">
+            <span>작업명</span>
+            <input id="taskName" type="text" maxlength="80" placeholder="예: 피쉬 낚싯대 가이드 PDF" autocomplete="off">
+          </label>
+          <div class="row2">
+            <label class="field">
+              <span>카테고리</span>
+              <select id="taskCat">
+                <option value="웹 게임">웹 게임</option>
+                <option value="로블록스">로블록스</option>
+                <option value="문서·PDF">문서·PDF</option>
+                <option value="점검·브리핑">점검·브리핑</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>예상 시간(분)</span>
+              <input id="taskEta" type="number" inputmode="numeric" min="1" max="600" placeholder="예: 30">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="btn primary" id="startBtn" type="button">▶ 작업 시작</button>
+            <button class="btn stop" id="stopBtn" type="button" disabled>⏹ 완료 및 기록</button>
+          </div>
+          <p class="hint">시작을 누르면 시간이 흐르고, 완료를 누르면 기록에 쌓이면서 보고 문구가 만들어져.</p>
+        </div>
+      </div>
+
+      <div class="report" id="reportPreview" hidden>
+        <div>
+          <div class="rp-k">보고 문구 미리보기</div>
+          <p id="reportText"></p>
+        </div>
+        <button class="btn ghost" id="copyReport" type="button">📋 보고 문구 복사</button>
+      </div>
+    </section>
+
+    <!-- 통계 -->
+    <section class="stats" aria-label="작업 통계">
+      <div class="stat">
+        <div class="k">✅ 총 완료 작업</div>
+        <div class="v" id="statCount">0<em>건</em></div>
+      </div>
+      <div class="stat">
+        <div class="k">⏳ 총 누적 소요 시간</div>
+        <div class="v" id="statTotal">0분</div>
+      </div>
+      <div class="stat">
+        <div class="k">📈 평균 소요 시간</div>
+        <div class="v" id="statAvg">0분</div>
+      </div>
+      <div class="stat">
+        <div class="k">🏆 최장 작업 TOP 1</div>
+        <div class="v small" id="statTop">—</div>
+      </div>
+    </section>
+
+    <!-- 기록 -->
+    <section aria-labelledby="recordsTitle">
+      <div class="records-head">
+        <h2 id="recordsTitle">📚 작업 기록 <span class="cnt" id="listCount"></span></h2>
+        <div class="search">
+          <input id="search" type="search" placeholder="작업명·설명 검색" autocomplete="off" aria-label="작업 검색">
+        </div>
+      </div>
+      <div class="notice" id="loadNotice" hidden></div>
+      <div class="chips" id="chips" role="group" aria-label="카테고리 필터"></div>
+      <div class="timeline" id="list"></div>
+      <p class="empty" id="empty" hidden>조건에 맞는 기록이 없어.</p>
+    </section>
+  </main>
+
+  <footer>
+    <b>🍀 클로버 작업 타이머 &amp; 기록 보드</b> · ㅍ<br>
+    기록은 이 브라우저(clover_manual_tasks_v1)와 <code>tasks.json</code>에서 합쳐져.
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS_MANUAL = 'clover_manual_tasks_v1';
+  var LS_RUNNING = 'clover_timer_running_v1';
+  var CATS = [
+    { key: 'all', label: '전체' },
+    { key: '웹 게임', label: '웹 게임' },
+    { key: '로블록스', label: '로블록스' },
+    { key: '문서·PDF', label: '문서·PDF' },
+    { key: '점검·브리핑', label: '점검·브리핑' }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var els = {
+    clockDate: $('clockDate'), clockTime: $('clockTime'),
+    display: $('timerDisplay'), sub: $('timerSub'),
+    bar: $('bar'), barFill: $('barFill'), barLeft: $('barLeft'), barRight: $('barRight'),
+    warn: $('warnBadge'), badge: $('stateBadge'),
+    name: $('taskName'), cat: $('taskCat'), eta: $('taskEta'),
+    start: $('startBtn'), stop: $('stopBtn'),
+    report: $('reportPreview'), reportText: $('reportText'), copyReport: $('copyReport'),
+    statCount: $('statCount'), statTotal: $('statTotal'), statAvg: $('statAvg'), statTop: $('statTop'),
+    chips: $('chips'), list: $('list'), empty: $('empty'), listCount: $('listCount'),
+    search: $('search'), notice: $('loadNotice'), toast: $('toast')
+  };
+
+  var state = {
+    remote: [],
+    manual: [],
+    filter: 'all',
+    query: '',
+    running: null,
+    timer: null,
+    reportText: ''
+  };
+
+  /* ---------- helpers ---------- */
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function kstDate(ms) {
+    var d = new Date(ms + 9 * 3600 * 1000);
+    return {
+      y: d.getUTCFullYear(), mo: d.getUTCMonth() + 1, d: d.getUTCDate(),
+      h: d.getUTCHours(), mi: d.getUTCMinutes(), s: d.getUTCSeconds(),
+      wd: ['일', '월', '화', '수', '목', '금', '토'][d.getUTCDay()]
+    };
+  }
+  function fmtStamp(ms) {
+    var t = kstDate(ms);
+    return t.y + '-' + pad(t.mo) + '-' + pad(t.d) + ' ' + pad(t.h) + ':' + pad(t.mi);
+  }
+  function fmtClock(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h > 0) return h + '시간 ' + pad(m) + '분 ' + pad(s) + '초';
+    return pad(m) + '분 ' + pad(s) + '초';
+  }
+  function fmtDur(sec) {
+    sec = Math.max(0, Math.round(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h > 0) return h + '시간 ' + m + '분 ' + s + '초';
+    if (m > 0) return m + '분 ' + s + '초';
+    return s + '초';
+  }
+  function durParts(sec) {
+    sec = Math.max(0, Math.round(sec));
+    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return { h: h, m: m, s: s };
+  }
+  function escapeHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function parseStamp(v) {
+    if (!v) return 0;
+    var m = String(v).match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (!m) return 0;
+    return Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) - 9 * 3600 * 1000;
+  }
+  function toast(msg) {
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { els.toast.classList.remove('show'); }, 1900);
+  }
+  function reportFor(task) {
+    return '⏱️ [' + task.title + '] 완료! 총 ' + fmtDur(task.elapsed_seconds) + ' 걸렸어';
+  }
+  function copy(text, okMsg) {
+    function done() { toast(okMsg || '복사했어!'); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        ok ? done() : toast('복사가 안 됐어. 문구를 직접 골라줘.');
+      } catch (e) { toast('복사가 안 됐어. 문구를 직접 골라줘.'); }
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  }
+
+  /* ---------- storage ---------- */
+  function loadManual() {
+    try {
+      var raw = localStorage.getItem(LS_MANUAL);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(function (t) { return t && t.title; }) : [];
+    } catch (e) { return []; }
+  }
+  function saveManual() {
+    try { localStorage.setItem(LS_MANUAL, JSON.stringify(state.manual)); } catch (e) {}
+  }
+  function loadRunning() {
+    try {
+      var raw = localStorage.getItem(LS_RUNNING);
+      var r = raw ? JSON.parse(raw) : null;
+      if (r && r.startedAt && r.title) return r;
+    } catch (e) {}
+    return null;
+  }
+  function saveRunning(r) {
+    try {
+      if (r) localStorage.setItem(LS_RUNNING, JSON.stringify(r));
+      else localStorage.removeItem(LS_RUNNING);
+    } catch (e) {}
+  }
+
+  /* ---------- clock ---------- */
+  function tickClock() {
+    var t = kstDate(Date.now());
+    els.clockDate.textContent = t.y + '. ' + pad(t.mo) + '. ' + pad(t.d) + ' (' + t.wd + ')';
+    els.clockTime.innerHTML = pad(t.h) + ':' + pad(t.mi) + ':' + pad(t.s) + '<small>KST</small>';
+  }
+
+  /* ---------- timer ---------- */
+  function elapsedNow() {
+    if (!state.running) return 0;
+    return Math.max(0, Math.floor((Date.now() - state.running.startedAt) / 1000));
+  }
+  function paintTimer() {
+    var running = !!state.running;
+    var sec = running ? elapsedNow() : 0;
+    var eta = running ? (Number(state.running.eta) || 0) : (Number(els.eta.value) || 0);
+
+    els.display.textContent = fmtClock(sec);
+    els.display.classList.toggle('idle', !running);
+
+    if (running) {
+      els.sub.innerHTML = '<b>' + escapeHtml(state.running.title) + '</b> 진행 중';
+      els.badge.textContent = '⏱️ 진행 중';
+      els.badge.classList.add('run');
+    } else {
+      els.sub.textContent = '작업을 시작하면 여기서 시간이 흘러';
+      els.badge.textContent = '대기 중';
+      els.badge.classList.remove('run');
+    }
+
+    var pct = 0;
+    if (eta > 0) {
+      pct = Math.min(100, (sec / (eta * 60)) * 100);
+      els.bar.classList.remove('idle');
+      els.barFill.style.width = pct.toFixed(1) + '%';
+      els.barLeft.textContent = (running ? '진행률 ' : '예상 ') + Math.floor(pct) + '%';
+      els.barRight.textContent = '예상 ' + eta + '분 · ' + (running ? '경과 ' + fmtDur(sec) : '대기');
+    } else {
+      els.bar.classList.add('idle');
+      els.barFill.style.width = '';
+      els.barLeft.textContent = running ? '예상 시간 미입력 · 그냥 시간을 재는 중' : '예상 시간을 넣으면 진행률이 보여';
+      els.barRight.textContent = running ? '경과 ' + fmtDur(sec) : '—';
+    }
+
+    var warnOn = running && eta > 0 && pct >= 80;
+    els.bar.classList.toggle('warn', warnOn);
+    els.warn.classList.toggle('show', warnOn);
+  }
+
+  function setRunningUI() {
+    var running = !!state.running;
+    els.start.disabled = running;
+    els.stop.disabled = !running;
+    els.name.disabled = running;
+    els.cat.disabled = running;
+    els.eta.disabled = running;
+    if (running) {
+      els.name.value = state.running.title;
+      els.cat.value = state.running.cat;
+      els.eta.value = state.running.eta || '';
+    }
+    els.start.textContent = running ? '⏳ 진행 중…' : '▶ 작업 시작';
+  }
+
+  function startTask() {
+    if (state.running) return;
+    var title = (els.name.value || '').trim();
+    if (!title) {
+      toast('작업명을 먼저 적어줘');
+      els.name.focus();
+      return;
+    }
+    var eta = Math.max(0, Math.min(600, Math.floor(Number(els.eta.value) || 0)));
+    state.running = {
+      title: title,
+      cat: els.cat.value || '웹 게임',
+      eta: eta,
+      startedAt: Date.now()
+    };
+    saveRunning(state.running);
+    els.report.hidden = true;
+    setRunningUI();
+    paintTimer();
+    toast('타이머 시작! ' + fmtStamp(state.running.startedAt) + ' KST');
+  }
+
+  function stopTask() {
+    if (!state.running) return;
+    var r = state.running;
+    var finishedAt = Date.now();
+    var elapsed = Math.max(1, Math.round((finishedAt - r.startedAt) / 1000));
+    var task = {
+      id: 'm' + finishedAt,
+      title: r.title,
+      category: r.cat,
+      state: 'done',
+      started_kst: fmtStamp(r.startedAt),
+      finished_kst: fmtStamp(finishedAt),
+      elapsed_seconds: elapsed,
+      elapsed_text: fmtDur(elapsed),
+      summary: '직접 기록한 작업' + (r.eta ? ' · 예상 ' + r.eta + '분' : ''),
+      source: 'manual'
+    };
+    state.manual.unshift(task);
+    state.manual = state.manual.slice(0, 200);
+    saveManual();
+
+    state.running = null;
+    saveRunning(null);
+    els.name.value = '';
+    els.eta.value = '';
+
+    state.reportText = reportFor(task);
+    els.reportText.innerHTML = '⏱️ [<b>' + escapeHtml(task.title) + '</b>] 완료! 총 <b>' +
+      fmtDur(task.elapsed_seconds) + '</b> 걸렸어';
+    els.report.hidden = false;
+
+    setRunningUI();
+    paintTimer();
+    renderStats();
+    renderChips();
+    renderList();
+    toast('기록 완료! ' + fmtDur(task.elapsed_seconds) + ' 걸렸어');
+  }
+
+  /* ---------- data ---------- */
+  function loadRemote() {
+    if (typeof fetch !== 'function') { failLoad('이 브라우저에서는 tasks.json을 불러올 수 없어.'); return; }
+    fetch('tasks.json?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var list = Array.isArray(data) ? data : (data && data.tasks) || [];
+        state.remote = list.filter(function (t) { return t && t.title; }).map(function (t) {
+          return {
+            id: t.id || ('r' + Math.random().toString(36).slice(2)),
+            title: t.title,
+            category: t.category || '점검·브리핑',
+            state: t.state || 'done',
+            started_kst: t.started_kst || '',
+            finished_kst: t.finished_kst || '',
+            elapsed_seconds: Number(t.elapsed_seconds) || 0,
+            elapsed_text: t.elapsed_text || fmtDur(Number(t.elapsed_seconds) || 0),
+            summary: t.summary || '',
+            source: 'handoff'
+          };
+        });
+        els.notice.hidden = true;
+        renderAll();
+      })
+      .catch(function (err) { failLoad('작업 기록(tasks.json)을 불러오지 못했어. ' + (err && err.message ? err.message : '')); });
+  }
+  function failLoad(msg) {
+    els.notice.hidden = false;
+    els.notice.textContent = msg + ' 직접 기록한 작업은 그대로 보여.';
+    renderAll();
+  }
+
+  function allTasks() {
+    var list = state.remote.concat(state.manual);
+    list.sort(function (a, b) { return parseStamp(b.started_kst) - parseStamp(a.started_kst); });
+    return list;
+  }
+  function doneTasks() {
+    return allTasks().filter(function (t) { return t.state === 'done' || t.state === 'finished'; });
+  }
+
+  /* ---------- render ---------- */
+  function catKey(cat) {
+    if (cat === '웹 게임') return 'game';
+    if (cat === '로블록스') return 'roblox';
+    if (cat === '문서·PDF') return 'doc';
+    return 'check';
+  }
+  function stateLabel(s) {
+    return { done: '완료', finished: '완료', running: '진행 중', canceled: '취소', failed: '실패' }[s] || s || '기록';
+  }
+
+  function renderStats() {
+    var done = doneTasks();
+    var total = 0, top = null;
+    done.forEach(function (t) {
+      var sec = Number(t.elapsed_seconds) || 0;
+      total += sec;
+      if (!top || sec > top.sec) top = { sec: sec, title: t.title };
+    });
+    els.statCount.innerHTML = done.length + '<em>건</em>';
+    els.statTotal.textContent = fmtDur(total);
+    els.statAvg.textContent = done.length ? fmtDur(total / done.length) : '0분';
+    if (top) {
+      els.statTop.innerHTML = '<span class="em">' + fmtDur(top.sec) + '</span> · ' + escapeHtml(top.title);
+      els.statTop.title = top.title;
+    } else {
+      els.statTop.textContent = '—';
+    }
+  }
+
+  function renderChips() {
+    var all = allTasks();
+    els.chips.innerHTML = CATS.map(function (c) {
+      var n = c.key === 'all' ? all.length : all.filter(function (t) { return t.category === c.key; }).length;
+      return '<button class="chip' + (state.filter === c.key ? ' on' : '') + '" type="button" data-cat="' +
+        escapeHtml(c.key) + '" aria-pressed="' + (state.filter === c.key) + '">' +
+        escapeHtml(c.label) + ' <span class="n">' + n + '</span></button>';
+    }).join('');
+  }
+
+  function durHtml(sec) {
+    var p = durParts(sec);
+    var out = '';
+    if (p.h) out += '<b>' + p.h + '</b><span class="u">시간</span>';
+    out += '<b>' + p.m + '</b><span class="u">분</span>';
+    out += '<b>' + p.s + '</b><span class="u">초</span>';
+    return out;
+  }
+
+  function shortRange(sMs, fMs) {
+    if (!sMs) return '시각 기록 없음';
+    var s = kstDate(sMs);
+    var startStr = fmtStamp(sMs);
+    if (!fMs) return startStr + ' 시작 · KST';
+    var f = kstDate(fMs);
+    var endStr;
+    if (s.y === f.y && s.mo === f.mo && s.d === f.d) {
+      endStr = pad(f.h) + ':' + pad(f.mi);
+    } else {
+      endStr = fmtStamp(fMs);
+    }
+    return startStr + ' → ' + endStr + ' KST';
+  }
+
+  function renderList() {
+    var all = allTasks();
+    var q = state.query.trim().toLowerCase();
+    var list = all.filter(function (t) {
+      if (state.filter !== 'all' && t.category !== state.filter) return false;
+      if (!q) return true;
+      return (String(t.title) + ' ' + String(t.summary)).toLowerCase().indexOf(q) !== -1;
+    });
+
+    els.listCount.textContent = list.length + ' / ' + all.length + '건';
+
+    if (!list.length) {
+      els.list.innerHTML = '';
+      els.empty.hidden = false;
+      els.empty.textContent = all.length ? '조건에 맞는 기록이 없어.' : '아직 기록이 없어. 위에서 첫 작업을 시작해 봐.';
+      return;
+    }
+    els.empty.hidden = true;
+
+    els.list.innerHTML = list.map(function (t, i) {
+      var isManual = t.source === 'manual';
+      var sMs = parseStamp(t.started_kst), fMs = parseStamp(t.finished_kst);
+      var range = shortRange(sMs, fMs);
+
+      var tagCls = 'tag ' + (isManual ? 'manual' : catKey(t.category));
+      var stateCls = 'tag state ' + (t.state === 'done' ? 'done' : t.state || '');
+      var shortWhen = sMs ? pad(kstDate(sMs).mo) + '.' + pad(kstDate(sMs).d) + ' ' + pad(kstDate(sMs).h) + ':' + pad(kstDate(sMs).mi) : '';
+
+      return '<article class="card cat-' + catKey(t.category) + (t.state !== 'done' ? ' pending' : '') + '" style="animation-delay:' + Math.min(i * 24, 240) + 'ms">' +
+        '<div class="card-top">' +
+          '<span class="' + tagCls + '">' + escapeHtml(isManual ? '직접 기록 · ' + t.category : t.category) + '</span>' +
+          '<span class="' + stateCls + '">' + escapeHtml(stateLabel(t.state)) + '</span>' +
+          '<span class="when">' + escapeHtml(shortWhen) + '</span>' +
+        '</div>' +
+        '<h3>' + escapeHtml(t.title) + '</h3>' +
+        '<div class="dur">' + durHtml(t.elapsed_seconds) +
+          '<span class="lt">' + escapeHtml(fmtDur(t.elapsed_seconds)) + '</span></div>' +
+        (t.summary ? '<p>' + escapeHtml(t.summary) + '</p>' : '') +
+        '<div class="card-foot">' +
+          '<span class="range">' + escapeHtml(range) + '</span>' +
+          '<span style="display:flex;gap:6px;align-items:center">' +
+            '<button class="mini" type="button" data-copy="' + escapeHtml(t.id) + '">📋 보고 문구 복사</button>' +
+            (isManual ? '<button class="mini del" type="button" data-del="' + escapeHtml(t.id) + '" aria-label="이 기록 삭제">✕</button>' : '') +
+          '</span>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function renderAll() {
+    renderStats();
+    renderChips();
+    renderList();
+  }
+
+  function findTask(id) {
+    var pool = state.remote.concat(state.manual);
+    for (var i = 0; i < pool.length; i++) { if (pool[i].id === id) return pool[i]; }
+    return null;
+  }
+
+  /* ---------- events ---------- */
+  els.start.addEventListener('click', startTask);
+  els.stop.addEventListener('click', stopTask);
+  els.copyReport.addEventListener('click', function () {
+    if (!state.reportText) return;
+    copy(state.reportText, '보고 문구를 복사했어!');
+  });
+  els.name.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !state.running) { e.preventDefault(); startTask(); }
+  });
+  els.eta.addEventListener('change', function () { if (!state.running) paintTimer(); });
+  els.search.addEventListener('input', function () {
+    state.query = els.search.value || '';
+    renderList();
+  });
+  els.chips.addEventListener('click', function (e) {
+    var btn = e.target.closest('.chip');
+    if (!btn) return;
+    state.filter = btn.getAttribute('data-cat') || 'all';
+    renderChips();
+    renderList();
+  });
+  els.list.addEventListener('click', function (e) {
+    var copyBtn = e.target.closest('[data-copy]');
+    if (copyBtn) {
+      var t = findTask(copyBtn.getAttribute('data-copy'));
+      if (t) copy(reportFor(t), '보고 문구를 복사했어!');
+      return;
+    }
+    var delBtn = e.target.closest('[data-del]');
+    if (delBtn) {
+      var id = delBtn.getAttribute('data-del');
+      var target = findTask(id);
+      if (!target) return;
+      if (!window.confirm('이 기록을 지울까? "' + target.title + '"')) return;
+      state.manual = state.manual.filter(function (t) { return t.id !== id; });
+      saveManual();
+      renderAll();
+      toast('기록을 지웠어');
+    }
+  });
+
+  /* ---------- boot ---------- */
+  function boot() {
+    state.manual = loadManual();
+    state.running = loadRunning();
+    setRunningUI();
+    paintTimer();
+    tickClock();
+    setInterval(tickClock, 1000);
+    setInterval(function () { if (state.running) paintTimer(); }, 1000);
+    renderAll();
+    loadRemote();
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
