@@ -1,9 +1,45 @@
 {
-  "generated_at": "2026-11-23T16:26:13+09:00",
-  "generated_at_kst": "2026-11-23 16:26 KST",
+  "generated_at": "2026-11-24T08:28:58+09:00",
+  "generated_at_kst": "2026-11-24 08:28 KST",
   "source": "클로버 작업 기록",
-  "count": 59,
+  "count": 62,
   "tasks": [
+    {
+      "id": "h20261124-7fb6d628",
+      "title": "🎨 RPG 앱 이미지 10종 생성",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-24 08:16",
+      "finished_kst": "2026-11-24 08:28",
+      "elapsed_seconds": 710,
+      "elapsed_text": "11분 50초",
+      "summary": "'🎨 RPG 앱 이미지 10종 생성' 작업을 진행해 마무리한 기록.",
+      "source": "handoff"
+    },
+    {
+      "id": "h20261124-274fd7f9",
+      "title": "☀️ 모닝 스캔",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-24 06:50",
+      "finished_kst": "2026-11-24 06:53",
+      "elapsed_seconds": 194,
+      "elapsed_text": "3분 14초",
+      "summary": "11월 24일 아침 모닝 스캔: 메일·일정·로블록스·날씨를 훑어 브리핑을 준비.",
+      "source": "handoff"
+    },
+    {
+      "id": "h20261123-23fe2606",
+      "title": "🌙 저녁 스캔",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-23 16:50",
+      "finished_kst": "2026-11-23 16:52",
+      "elapsed_seconds": 145,
+      "elapsed_text": "2분 25초",
+      "summary": "11월 23일 아침 모닝 스캔: 메일·일정·로블록스·날씨를 훑어 브리핑을 준비.",
+      "source": "handoff"
+    },
     {
       "id": "h20261123-459fb8aa",
       "title": "📲 CODEX RPG 크롬 앱 설치(PWA) 구현 및 배포",
