@@ -1,9 +1,45 @@
 {
-  "generated_at": "2026-11-24T08:28:58+09:00",
-  "generated_at_kst": "2026-11-24 08:28 KST",
+  "generated_at": "2026-11-24T19:07:17+09:00",
+  "generated_at_kst": "2026-11-24 19:07 KST",
   "source": "클로버 작업 기록",
-  "count": 62,
+  "count": 65,
   "tasks": [
+    {
+      "id": "h20261124-25569be4",
+      "title": "🎨 CODEX 앱 로고 교체·배포",
+      "category": "웹 게임",
+      "state": "done",
+      "started_kst": "2026-11-24 18:58",
+      "finished_kst": "2026-11-24 19:07",
+      "elapsed_seconds": 535,
+      "elapsed_text": "8분 55초",
+      "summary": "'🎨 CODEX 앱 로고 교체·배포' 작업을 진행해 마무리한 기록.",
+      "source": "handoff"
+    },
+    {
+      "id": "h20261124-8137079f",
+      "title": "🌙 저녁 스캔",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-24 18:50",
+      "finished_kst": "2026-11-24 18:51",
+      "elapsed_seconds": 86,
+      "elapsed_text": "1분 26초",
+      "summary": "11월 24일 아침 모닝 스캔: 메일·일정·로블록스·날씨를 훑어 브리핑을 준비.",
+      "source": "handoff"
+    },
+    {
+      "id": "h20261124-5f948b03",
+      "title": "🌤️ 점심 스캔",
+      "category": "점검·브리핑",
+      "state": "done",
+      "started_kst": "2026-11-24 11:50",
+      "finished_kst": "2026-11-24 11:55",
+      "elapsed_seconds": 303,
+      "elapsed_text": "5분 3초",
+      "summary": "11월 24일 아침 모닝 스캔: 메일·일정·로블록스·날씨를 훑어 브리핑을 준비.",
+      "source": "handoff"
+    },
     {
       "id": "h20261124-7fb6d628",
       "title": "🎨 RPG 앱 이미지 10종 생성",
